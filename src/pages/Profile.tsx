@@ -95,27 +95,27 @@ const Profile = () => {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
-                {isEditing ? <Input id="name" value={name} onChange={e => setName(e.target.value)} /> : <div className="p-2 border rounded-md bg-gray-800">{user.name}</div>}
+                {isEditing ? <Input id="name" value={name} onChange={e => setName(e.target.value)} className="bg-violet-700" /> : <div className="p-2 border rounded-md bg-gray-800">{user.name}</div>}
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
-                <div className="p-2 border rounded-md bg-gray-800">{user.email}</div>
+                <div className="p-2 border rounded-md bg-violet-700">{user.email}</div>
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="regNumber">Registration Number</Label>
-                <div className="p-2 border rounded-md bg-gray-800">{user.regNumber}</div>
+                <div className="p-2 border rounded-md bg-violet-700">{user.regNumber}</div>
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="roomNumber">Room Number</Label>
-                <div className="p-2 border rounded-md bg-gray-800">{user.roomNumber}</div>
+                <div className="p-2 border rounded-md bg-violet-700">{user.roomNumber}</div>
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="phoneNumber">Phone Number</Label>
-                {isEditing ? <Input id="phoneNumber" value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} placeholder="Enter phone number" /> : <div className="p-2 border rounded-md bg-gray-800">
+                {isEditing ? <Input id="phoneNumber" value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} placeholder="Enter phone number" className="bg-violet-700" /> : <div className="p-2 border rounded-md bg-gray-800">
                     {user.phoneNumber || 'Not provided'}
                   </div>}
               </div>
