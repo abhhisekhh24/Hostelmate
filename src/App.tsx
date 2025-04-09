@@ -27,20 +27,13 @@ import Layout from "./components/layout/Layout";
 const queryClient = new QueryClient();
 
 const App = () => {
-  // Check for system dark mode preference
-  useEffect(() => {
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      document.documentElement.classList.add('dark');
-    }
-  }, []);
-
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TooltipProvider>
-          <Toaster />
-          <Sonner />
           <BrowserRouter>
+            <Toaster />
+            <Sonner />
             <Routes>
               {/* Auth Routes */}
               <Route path="/login" element={<Login />} />
@@ -125,4 +118,16 @@ const App = () => {
   );
 };
 
-export default App;
+// Add a separate component to handle dark mode detection
+const AppWrapper = () => {
+  // Check for system dark mode preference
+  useEffect(() => {
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.classList.add('dark');
+    }
+  }, []);
+
+  return <App />;
+};
+
+export default AppWrapper;
