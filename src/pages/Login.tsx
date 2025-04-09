@@ -13,6 +13,7 @@ import { useToast } from '@/components/ui/use-toast';
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [regNumber, setRegNumber] = useState('');
   const [error, setError] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -22,25 +23,25 @@ const Login = () => {
     e.preventDefault();
     setError('');
     
-    if (!email || !password) {
+    if (!email || !password || !regNumber) {
       setError('Please fill in all fields');
       return;
     }
 
     try {
-      await login(email, password);
+      await login(email, password, regNumber);
       toast({
         title: "Login successful",
         description: "Welcome back to the Hostel Mess Management System",
       });
       navigate('/dashboard');
     } catch (err) {
-      setError('Invalid email or password');
+      setError('Invalid credentials');
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-mess-100 to-mess-200 px-4">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-mess-100 to-mess-300 dark:from-mess-900 dark:to-mess-black-dark px-4">
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Sign in</CardTitle>
@@ -64,6 +65,15 @@ const Login = () => {
                 placeholder="your.email@example.com" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="regNumber">Registration Number</Label>
+              <Input 
+                id="regNumber" 
+                placeholder="REG123" 
+                value={regNumber}
+                onChange={(e) => setRegNumber(e.target.value)}
               />
             </div>
             <div className="space-y-2">

@@ -16,6 +16,8 @@ const Register = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [roomNumber, setRoomNumber] = useState('');
+  const [regNumber, setRegNumber] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [error, setError] = useState('');
   const { register } = useAuth();
   const navigate = useNavigate();
@@ -25,8 +27,8 @@ const Register = () => {
     e.preventDefault();
     setError('');
     
-    if (!name || !email || !password || !confirmPassword || !roomNumber) {
-      setError('Please fill in all fields');
+    if (!name || !email || !password || !confirmPassword || !roomNumber || !regNumber) {
+      setError('Please fill in all required fields');
       return;
     }
 
@@ -36,7 +38,7 @@ const Register = () => {
     }
 
     try {
-      await register(name, email, password, roomNumber);
+      await register(name, email, password, roomNumber, regNumber, phoneNumber);
       toast({
         title: "Registration successful",
         description: "Welcome to the Hostel Mess Management System",
@@ -48,7 +50,7 @@ const Register = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-mess-100 to-mess-200 px-4">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-mess-100 to-mess-300 dark:from-mess-900 dark:to-mess-black-dark px-4">
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Create an account</CardTitle>
@@ -81,6 +83,24 @@ const Register = () => {
                 placeholder="your.email@example.com" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="regNumber">Registration Number</Label>
+              <Input 
+                id="regNumber" 
+                placeholder="REG123" 
+                value={regNumber}
+                onChange={(e) => setRegNumber(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phoneNumber">Phone Number (Optional)</Label>
+              <Input 
+                id="phoneNumber" 
+                placeholder="9876543210" 
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
               />
             </div>
             <div className="space-y-2">

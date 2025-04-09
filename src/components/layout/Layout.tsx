@@ -19,9 +19,9 @@ const Layout: React.FC<LayoutProps> = ({ children, requireAuth = false }) => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen dark:bg-gray-900">
       <Navbar />
-      <main className="flex-grow bg-gray-50">
+      <main className="flex-grow bg-gray-50 dark:bg-gray-900">
         {children}
       </main>
       <Footer />
