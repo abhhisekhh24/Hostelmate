@@ -9,6 +9,8 @@ import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
+import FoodIllustrations from '@/components/animations/FoodIllustrations';
+import Logo from '@/components/logo/Logo';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -41,10 +43,15 @@ const Login = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-mess-100 to-mess-300 dark:from-mess-900 dark:to-mess-black-dark px-4">
-      <Card className="w-full max-w-md shadow-lg">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-mess-100 to-mess-300 dark:from-mess-900 dark:to-mess-black-dark px-4 overflow-hidden">
+      <FoodIllustrations />
+      
+      <Card className="w-full max-w-md shadow-lg backdrop-blur-sm bg-white/90 dark:bg-gray-900/90 border-mess-200 dark:border-mess-800 z-10">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-center">Sign in</CardTitle>
+          <div className="flex justify-center mb-4">
+            <Logo size="lg" />
+          </div>
+          <CardTitle className="text-2xl font-bold text-center text-mess-700 dark:text-mess-300">Sign in</CardTitle>
           <CardDescription className="text-center">
             Enter your credentials to access the mess management system
           </CardDescription>
@@ -65,6 +72,7 @@ const Login = () => {
                 placeholder="your.email@example.com" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                className="border-mess-200 focus:border-mess-400 dark:border-mess-700 dark:focus:border-mess-500"
               />
             </div>
             <div className="space-y-2">
@@ -74,12 +82,13 @@ const Login = () => {
                 placeholder="REG123" 
                 value={regNumber}
                 onChange={(e) => setRegNumber(e.target.value)}
+                className="border-mess-200 focus:border-mess-400 dark:border-mess-700 dark:focus:border-mess-500"
               />
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Password</Label>
-                <Link to="/forgot-password" className="text-sm text-mess-600 hover:text-mess-700">
+                <Link to="/forgot-password" className="text-sm text-mess-600 hover:text-mess-700 dark:text-mess-400 dark:hover:text-mess-300">
                   Forgot password?
                 </Link>
               </div>
@@ -88,15 +97,18 @@ const Login = () => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                className="border-mess-200 focus:border-mess-400 dark:border-mess-700 dark:focus:border-mess-500"
               />
             </div>
-            <Button type="submit" className="w-full bg-mess-600 hover:bg-mess-700">Sign in</Button>
+            <Button type="submit" className="w-full bg-mess-600 hover:bg-mess-700 dark:bg-mess-500 dark:hover:bg-mess-600 transition-colors duration-200">
+              Sign in
+            </Button>
           </form>
         </CardContent>
         <CardFooter className="flex justify-center">
           <div className="text-sm text-muted-foreground">
             Don't have an account?{" "}
-            <Link to="/register" className="text-mess-600 hover:text-mess-700 font-semibold">
+            <Link to="/register" className="text-mess-600 hover:text-mess-700 dark:text-mess-400 dark:hover:text-mess-300 font-semibold">
               Sign up
             </Link>
           </div>
