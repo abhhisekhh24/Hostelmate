@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 type User = {
   id: string;
@@ -15,12 +16,12 @@ type User = {
 
 type AuthContextType = {
   user: User | null;
-  login: (email: string, password: string, regNumber: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string, roomNumber: string, regNumber: string, phoneNumber?: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   isLoading: boolean;
-  updateProfile: (updates: Partial<User>) => void;
-  toggleTheme: () => void;
+  updateProfile: (updates: Partial<User>) => Promise<void>;
+  toggleTheme: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -36,57 +37,99 @@ export const useAuth = () => {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const { toast } = useToast();
 
-  useEffect(() => {
-    // Check for stored user data on component mount
-    const storedUser = localStorage.getItem('hostelMessUser');
-    if (storedUser) {
-      try {
-        const userData = JSON.parse(storedUser);
-        
-        // Ensure theme is either 'light' or 'dark'
-        if (userData.theme && (userData.theme !== 'light' && userData.theme !== 'dark')) {
-          userData.theme = 'light';
-        }
-        
-        setUser(userData as User);
-        
-        if (userData.theme === 'dark') {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
-      } catch (error) {
-        console.error("Error parsing stored user data:", error);
-        localStorage.removeItem('hostelMessUser');
-      }
+  // Function to transform Supabase user data into our User type
+  const formatUser = async (supabaseUser: any) => {
+    if (!supabaseUser) return null;
+
+    // Get the user profile from profiles table
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', supabaseUser.id)
+      .single();
+
+    if (profileError) {
+      console.error('Error fetching user profile:', profileError);
+      return null;
     }
-    setIsLoading(false);
+
+    // Apply the user's theme if it exists
+    if (profileData.theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+
+    return {
+      id: supabaseUser.id,
+      email: supabaseUser.email || '',
+      name: profileData.name,
+      roomNumber: profileData.room_number,
+      regNumber: profileData.reg_number,
+      phoneNumber: profileData.phone_number,
+      avatar: profileData.avatar,
+      theme: (profileData.theme as 'light' | 'dark') || 'light',
+    };
+  };
+
+  // Listen for auth changes
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setIsLoading(true);
+        if (session?.user) {
+          const formattedUser = await formatUser(session.user);
+          setUser(formattedUser);
+        } else {
+          setUser(null);
+        }
+        setIsLoading(false);
+      }
+    );
+
+    // Get initial session
+    const initializeAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const formattedUser = await formatUser(session.user);
+        setUser(formattedUser);
+      }
+      setIsLoading(false);
+    };
+    
+    initializeAuth();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const login = async (email: string, password: string, regNumber: string) => {
+  const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // In a real app, this would be an API call to authenticate
-      // For now, we'll simulate authentication
-      if (email === 'demo@example.com' && password === 'Password1!' && regNumber === '1234567890') {
-        const userData: User = {
-          id: '1',
-          name: 'Demo User',
-          email: 'demo@example.com',
-          roomNumber: 'A-101',
-          regNumber: '1234567890',
-          phoneNumber: '9876543210',
-          theme: 'light',
-        };
-        setUser(userData);
-        localStorage.setItem('hostelMessUser', JSON.stringify(userData));
-      } else {
-        throw new Error('Invalid credentials');
-      }
-    } catch (error) {
-      console.error('Login failed:', error);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+      
+      const formattedUser = await formatUser(data.user);
+      setUser(formattedUser);
+      
+      toast({
+        title: "Login successful",
+        description: "Welcome back to the Hostel Mess Management System",
+      });
+    } catch (error: any) {
+      console.error('Login failed:', error.message);
+      toast({
+        title: "Login failed",
+        description: error.message,
+        variant: "destructive",
+      });
       throw error;
     } finally {
       setIsLoading(false);
@@ -96,59 +139,144 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (name: string, email: string, password: string, roomNumber: string, regNumber: string, phoneNumber?: string) => {
     setIsLoading(true);
     try {
-      // In a real app, this would be an API call to register
-      // For now, we'll simulate registration
-      const userData: User = {
-        id: Math.random().toString(36).substr(2, 9),
-        name,
+      // Register the user with Supabase
+      const { data, error } = await supabase.auth.signUp({
         email,
-        roomNumber,
-        regNumber,
-        phoneNumber,
-        theme: 'light', // Explicitly set as 'light' with the correct type
-      };
-      setUser(userData);
-      localStorage.setItem('hostelMessUser', JSON.stringify(userData));
-    } catch (error) {
-      console.error('Registration failed:', error);
+        password,
+        options: {
+          data: {
+            name,
+            roomNumber,
+            regNumber,
+            phoneNumber,
+          },
+        },
+      });
+
+      if (error) throw error;
+
+      // After signup, the trigger we created will automatically add the user to the profiles table
+      // We should now be able to get their profile
+      const formattedUser = await formatUser(data.user);
+      setUser(formattedUser);
+      
+      toast({
+        title: "Registration successful",
+        description: "Welcome to the Hostel Mess Management System",
+      });
+    } catch (error: any) {
+      console.error('Registration failed:', error.message);
+      toast({
+        title: "Registration failed",
+        description: error.message,
+        variant: "destructive",
+      });
       throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('hostelMessUser');
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      // Remove dark mode if it was set
+      document.documentElement.classList.remove('dark');
+    } catch (error: any) {
+      console.error('Logout failed:', error.message);
+      toast({
+        title: "Logout failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
-  const updateProfile = (updates: Partial<User>) => {
-    if (user) {
-      // Ensure theme is either 'light' or 'dark' if it exists in updates
-      if (updates.theme && updates.theme !== 'light' && updates.theme !== 'dark') {
-        updates.theme = 'light'; // Default to light if invalid value
+  const updateProfile = async (updates: Partial<User>) => {
+    if (!user) return;
+
+    try {
+      // Prepare the updates for the profiles table format
+      const profileUpdates: any = {};
+      
+      if (updates.name) profileUpdates.name = updates.name;
+      if (updates.phoneNumber) profileUpdates.phone_number = updates.phoneNumber;
+      if (updates.avatar) profileUpdates.avatar = updates.avatar;
+      if (updates.theme && (updates.theme === 'light' || updates.theme === 'dark')) {
+        profileUpdates.theme = updates.theme;
       }
       
-      const updatedUser = { ...user, ...updates } as User;
-      setUser(updatedUser);
-      localStorage.setItem('hostelMessUser', JSON.stringify(updatedUser));
+      // Update the profile in Supabase
+      const { error } = await supabase
+        .from('profiles')
+        .update(profileUpdates)
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setUser(prev => {
+        if (!prev) return null;
+        return { ...prev, ...updates };
+      });
+
+      // Apply theme change
+      if (updates.theme) {
+        if (updates.theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      }
+
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been updated successfully",
+      });
+    } catch (error: any) {
+      console.error('Profile update failed:', error.message);
+      toast({
+        title: "Profile update failed",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
-  const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
+  const toggleTheme = async () => {
+    if (!user) return;
     
-    if (newTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    const newTheme = user.theme === 'light' ? 'dark' : 'light';
     
-    if (user) {
-      const updatedUser = { ...user, theme: newTheme } as User;
-      setUser(updatedUser);
-      localStorage.setItem('hostelMessUser', JSON.stringify(updatedUser));
+    try {
+      // Update theme in database
+      const { error } = await supabase
+        .from('profiles')
+        .update({ theme: newTheme })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setUser(prev => {
+        if (!prev) return null;
+        return { ...prev, theme: newTheme };
+      });
+      
+      // Apply theme change to DOM
+      if (newTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    } catch (error: any) {
+      console.error('Theme toggle failed:', error.message);
+      toast({
+        title: "Theme toggle failed",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 

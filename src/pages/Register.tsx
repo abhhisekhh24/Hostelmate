@@ -21,6 +21,7 @@ const Register = () => {
   const [regNumber, setRegNumber] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [error, setError] = useState('');
+  const [isRegistering, setIsRegistering] = useState(false);
   const [validationErrors, setValidationErrors] = useState<{
     regNumber?: string;
     phoneNumber?: string;
@@ -77,14 +78,13 @@ const Register = () => {
     }
 
     try {
+      setIsRegistering(true);
       await register(name, email, password, roomNumber, regNumber, phoneNumber);
-      toast({
-        title: "Registration successful",
-        description: "Welcome to the Hostel Mess Management System",
-      });
       navigate('/dashboard');
-    } catch (err) {
-      setError('Registration failed. Please try again.');
+    } catch (err: any) {
+      setError(err.message || 'Registration failed. Please try again.');
+    } finally {
+      setIsRegistering(false);
     }
   };
 
@@ -183,8 +183,12 @@ const Register = () => {
                 onChange={(e) => setConfirmPassword(e.target.value)}
               />
             </div>
-            <Button type="submit" className="w-full bg-mess-600 hover:bg-mess-700 dark:bg-mess-500 dark:hover:bg-mess-600 transition-colors duration-200">
-              Sign up
+            <Button 
+              type="submit" 
+              className="w-full bg-mess-600 hover:bg-mess-700 dark:bg-mess-500 dark:hover:bg-mess-600 transition-colors duration-200"
+              disabled={isRegistering}
+            >
+              {isRegistering ? "Creating account..." : "Sign up"}
             </Button>
           </form>
         </CardContent>

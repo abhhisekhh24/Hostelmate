@@ -15,60 +15,30 @@ import Logo from '@/components/logo/Logo';
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [regNumber, setRegNumber] = useState('');
   const [error, setError] = useState('');
-  const [validationErrors, setValidationErrors] = useState<{
-    regNumber?: string;
-    password?: string;
-  }>({});
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   
   const { login } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const validateForm = () => {
-    const newValidationErrors: {
-      regNumber?: string;
-      password?: string;
-    } = {};
-    
-    // Validate registration number
-    if (regNumber.length !== 10 || !/^\d+$/.test(regNumber)) {
-      newValidationErrors.regNumber = "Registration number must be 10 digits";
-    }
-    
-    // Validate password has at least one uppercase, one lowercase and one special character
-    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?])/.test(password)) {
-      newValidationErrors.password = "Password must contain at least one uppercase letter, one lowercase letter, and one special character";
-    }
-    
-    setValidationErrors(newValidationErrors);
-    return Object.keys(newValidationErrors).length === 0;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    setValidationErrors({});
     
-    if (!email || !password || !regNumber) {
+    if (!email || !password) {
       setError('Please fill in all fields');
       return;
     }
 
-    if (!validateForm()) {
-      return;
-    }
-
     try {
-      await login(email, password, regNumber);
-      toast({
-        title: "Login successful",
-        description: "Welcome back to the Hostel Mess Management System",
-      });
+      setIsLoggingIn(true);
+      await login(email, password);
       navigate('/dashboard');
-    } catch (err) {
-      setError('Invalid credentials');
+    } catch (err: any) {
+      setError(err.message || 'Invalid credentials');
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -106,19 +76,6 @@ const Login = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="regNumber">Registration Number</Label>
-              <Input 
-                id="regNumber" 
-                placeholder="10-digit number" 
-                value={regNumber}
-                onChange={(e) => setRegNumber(e.target.value)}
-                className="border-mess-200 focus:border-mess-400 dark:border-mess-700 dark:focus:border-mess-500"
-              />
-              {validationErrors.regNumber && (
-                <p className="text-xs text-red-500 mt-1">{validationErrors.regNumber}</p>
-              )}
-            </div>
-            <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Password</Label>
                 <Link to="/forgot-password" className="text-sm text-mess-600 hover:text-mess-700 dark:text-mess-400 dark:hover:text-mess-300">
@@ -132,12 +89,13 @@ const Login = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 className="border-mess-200 focus:border-mess-400 dark:border-mess-700 dark:focus:border-mess-500"
               />
-              {validationErrors.password && (
-                <p className="text-xs text-red-500 mt-1">{validationErrors.password}</p>
-              )}
             </div>
-            <Button type="submit" className="w-full bg-mess-600 hover:bg-mess-700 dark:bg-mess-500 dark:hover:bg-mess-600 transition-colors duration-200">
-              Sign in
+            <Button 
+              type="submit" 
+              className="w-full bg-mess-600 hover:bg-mess-700 dark:bg-mess-500 dark:hover:bg-mess-600 transition-colors duration-200"
+              disabled={isLoggingIn}
+            >
+              {isLoggingIn ? "Signing in..." : "Sign in"}
             </Button>
           </form>
         </CardContent>
