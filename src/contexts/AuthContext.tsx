@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from "@/integrations/supabase/client";
 
 type User = {
   id: string;
@@ -41,15 +42,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Check for stored user data on component mount
     const storedUser = localStorage.getItem('hostelMessUser');
     if (storedUser) {
-      const userData = JSON.parse(storedUser);
-      setUser(userData);
-      if (userData.theme && (userData.theme === 'light' || userData.theme === 'dark')) {
-        setTheme(userData.theme);
+      try {
+        const userData = JSON.parse(storedUser);
+        
+        // Ensure theme is either 'light' or 'dark'
+        if (userData.theme && (userData.theme !== 'light' && userData.theme !== 'dark')) {
+          userData.theme = 'light';
+        }
+        
+        setUser(userData as User);
+        
         if (userData.theme === 'dark') {
           document.documentElement.classList.add('dark');
         } else {
           document.documentElement.classList.remove('dark');
         }
+      } catch (error) {
+        console.error("Error parsing stored user data:", error);
+        localStorage.removeItem('hostelMessUser');
       }
     }
     setIsLoading(false);
@@ -119,7 +129,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updates.theme = 'light'; // Default to light if invalid value
       }
       
-      const updatedUser = { ...user, ...updates };
+      const updatedUser = { ...user, ...updates } as User;
       setUser(updatedUser);
       localStorage.setItem('hostelMessUser', JSON.stringify(updatedUser));
     }
@@ -136,7 +146,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     
     if (user) {
-      const updatedUser = { ...user, theme: newTheme };
+      const updatedUser = { ...user, theme: newTheme } as User;
       setUser(updatedUser);
       localStorage.setItem('hostelMessUser', JSON.stringify(updatedUser));
     }
