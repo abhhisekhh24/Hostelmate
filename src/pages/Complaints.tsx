@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,7 +45,7 @@ const Complaints = () => {
       if (error) throw error;
       
       if (data) {
-        setComplaints(data as Complaint[]);
+        setComplaints(data as unknown as Complaint[]);
       }
     } catch (error: any) {
       console.error('Error fetching complaints:', error.message);
@@ -104,10 +103,8 @@ const Complaints = () => {
         description: "Your complaint has been submitted successfully. We'll look into it as soon as possible.",
       });
 
-      // Refresh complaints list
       fetchComplaints();
       
-      // Reset form
       setSubject('');
       setCategory('');
       setDescription('');
@@ -123,7 +120,6 @@ const Complaints = () => {
     }
   };
 
-  // Format date to a more readable format
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -133,7 +129,6 @@ const Complaints = () => {
     });
   };
 
-  // Get the status color
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'resolved':
@@ -210,7 +205,6 @@ const Complaints = () => {
             </CardFooter>
           </Card>
           
-          {/* Display Complaints History */}
           <Card className="mt-8">
             <CardHeader>
               <CardTitle>My Complaints History</CardTitle>

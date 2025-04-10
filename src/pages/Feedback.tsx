@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -47,7 +46,7 @@ const Feedback = () => {
       if (error) throw error;
       
       if (data) {
-        setFeedbacks(data as Feedback[]);
+        setFeedbacks(data as unknown as Feedback[]);
       }
     } catch (error: any) {
       console.error('Error fetching feedbacks:', error.message);
@@ -104,10 +103,8 @@ const Feedback = () => {
         description: `Your feedback for ${activeMeal} has been submitted successfully.`,
       });
 
-      // Refresh feedbacks list
       fetchFeedbacks();
       
-      // Reset form
       setRating('');
       setComment('');
     } catch (error: any) {
@@ -122,7 +119,6 @@ const Feedback = () => {
     }
   };
 
-  // Format date to a more readable format
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -132,7 +128,6 @@ const Feedback = () => {
     });
   };
 
-  // Get the rating label for display
   const getRatingLabel = (rating: string) => {
     const ratings = {
       'excellent': 'Excellent',
@@ -212,7 +207,6 @@ const Feedback = () => {
         </CardFooter>
       </Card>
 
-      {/* Feedback History */}
       <Card className="max-w-2xl mx-auto">
         <CardHeader>
           <CardTitle>My Feedback History</CardTitle>

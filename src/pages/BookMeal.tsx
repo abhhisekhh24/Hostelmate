@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -68,7 +67,7 @@ const BookMeal = () => {
       if (error) throw error;
       
       if (data) {
-        setBookings(data as BookingSlot[]);
+        setBookings(data as unknown as BookingSlot[]);
       }
     } catch (error: any) {
       console.error('Error fetching bookings:', error.message);
@@ -108,7 +107,6 @@ const BookMeal = () => {
       return;
     }
 
-    // Check if any slots are selected
     const selectedMeals = Object.keys(selectedSlots);
     if (selectedMeals.length === 0) {
       toast({
@@ -122,10 +120,8 @@ const BookMeal = () => {
     try {
       setIsLoading(true);
       
-      // Format date as YYYY-MM-DD for storage
       const formattedDate = date.toISOString().split('T')[0];
       
-      // Create an array of booking objects for insertion
       const bookingsToInsert = selectedMeals.map(mealType => {
         const slotId = selectedSlots[mealType];
         const slotTimeObj = timeSlots[mealType as keyof typeof timeSlots].find(
@@ -152,10 +148,8 @@ const BookMeal = () => {
         description: "Your meal time slots have been booked successfully.",
       });
 
-      // Refresh bookings list
       fetchBookings();
       
-      // Reset selected slots
       setSelectedSlots({});
     } catch (error: any) {
       console.error('Error booking slots:', error.message);
@@ -279,7 +273,6 @@ const BookMeal = () => {
             </CardFooter>
           </Card>
 
-          {/* Bookings History */}
           <Card className="mt-8">
             <CardHeader>
               <CardTitle>My Bookings</CardTitle>
