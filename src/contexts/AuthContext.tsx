@@ -43,7 +43,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (storedUser) {
       const userData = JSON.parse(storedUser);
       setUser(userData);
-      if (userData.theme) {
+      if (userData.theme && (userData.theme === 'light' || userData.theme === 'dark')) {
         setTheme(userData.theme);
         if (userData.theme === 'dark') {
           document.documentElement.classList.add('dark');
@@ -95,7 +95,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         roomNumber,
         regNumber,
         phoneNumber,
-        theme: 'light',
+        theme: 'light', // Explicitly set as 'light' with the correct type
       };
       setUser(userData);
       localStorage.setItem('hostelMessUser', JSON.stringify(userData));
@@ -114,6 +114,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const updateProfile = (updates: Partial<User>) => {
     if (user) {
+      // Ensure theme is either 'light' or 'dark' if it exists in updates
+      if (updates.theme && updates.theme !== 'light' && updates.theme !== 'dark') {
+        updates.theme = 'light'; // Default to light if invalid value
+      }
+      
       const updatedUser = { ...user, ...updates };
       setUser(updatedUser);
       localStorage.setItem('hostelMessUser', JSON.stringify(updatedUser));
