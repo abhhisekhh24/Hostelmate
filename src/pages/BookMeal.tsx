@@ -1,12 +1,23 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar } from "@/components/ui/calendar";
 import { useToast } from '@/components/ui/use-toast';
-import { Utensils, Clock } from 'lucide-react';
+import { Utensils, Clock, CheckCircle } from 'lucide-react';
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
+type BookingSlot = {
+  id: string;
+  meal_type: string;
+  booking_date: string;
+  time_slot: string;
+  created_at: string;
+};
 
 // Mock data for meal time slots
 const timeSlots = {
@@ -35,7 +46,41 @@ const BookMeal = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [activeMeal, setActiveMeal] = useState('breakfast');
   const [selectedSlots, setSelectedSlots] = useState<Record<string, string>>({});
+  const [bookings, setBookings] = useState<BookingSlot[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      fetchBookings();
+    }
+  }, [user]);
+
+  const fetchBookings = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('meal_bookings')
+        .select('*')
+        .order('booking_date', { ascending: false });
+
+      if (error) throw error;
+      
+      if (data) {
+        setBookings(data as BookingSlot[]);
+      }
+    } catch (error: any) {
+      console.error('Error fetching bookings:', error.message);
+      toast({
+        title: "Error fetching bookings",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSlotSelect = (mealType: string, slotId: string) => {
     setSelectedSlots({
@@ -44,16 +89,88 @@ const BookMeal = () => {
     });
   };
 
-  const handleBooking = () => {
-    // In a real app, this would send the booking data to an API
-    toast({
-      title: "Booking Successful",
-      description: "Your meal time slots have been booked successfully.",
-    });
+  const handleBooking = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to book meal slots.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!date) {
+      toast({
+        title: "Date Required",
+        description: "Please select a date for your booking.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if any slots are selected
+    const selectedMeals = Object.keys(selectedSlots);
+    if (selectedMeals.length === 0) {
+      toast({
+        title: "No Slots Selected",
+        description: "Please select at least one meal time slot.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      
+      // Format date as YYYY-MM-DD for storage
+      const formattedDate = date.toISOString().split('T')[0];
+      
+      // Create an array of booking objects for insertion
+      const bookingsToInsert = selectedMeals.map(mealType => {
+        const slotId = selectedSlots[mealType];
+        const slotTimeObj = timeSlots[mealType as keyof typeof timeSlots].find(
+          slot => slot.id === slotId
+        );
+        
+        return {
+          user_id: user.id,
+          meal_type: mealType,
+          booking_date: formattedDate,
+          time_slot: slotTimeObj ? slotTimeObj.time : 'Unknown time slot'
+        };
+      });
+
+      const { data, error } = await supabase
+        .from('meal_bookings')
+        .insert(bookingsToInsert)
+        .select();
+
+      if (error) throw error;
+
+      toast({
+        title: "Booking Successful",
+        description: "Your meal time slots have been booked successfully.",
+      });
+
+      // Refresh bookings list
+      fetchBookings();
+      
+      // Reset selected slots
+      setSelectedSlots({});
+    } catch (error: any) {
+      console.error('Error booking slots:', error.message);
+      toast({
+        title: "Booking Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const formatDate = (date: Date | undefined) => {
-    if (!date) return '';
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { 
       weekday: 'long', 
       year: 'numeric', 
@@ -89,7 +206,7 @@ const BookMeal = () => {
             </CardContent>
             <CardFooter>
               <p className="text-sm text-gray-500">
-                Selected: <span className="font-medium">{formatDate(date)}</span>
+                Selected: <span className="font-medium">{date ? formatDate(date.toISOString()) : 'None'}</span>
               </p>
             </CardFooter>
           </Card>
@@ -155,10 +272,44 @@ const BookMeal = () => {
               <Button
                 onClick={handleBooking}
                 className="w-full bg-mess-600 hover:bg-mess-700"
+                disabled={isLoading}
               >
-                Book Selected Slots
+                {isLoading ? 'Booking...' : 'Book Selected Slots'}
               </Button>
             </CardFooter>
+          </Card>
+
+          {/* Bookings History */}
+          <Card className="mt-8">
+            <CardHeader>
+              <CardTitle>My Bookings</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {bookings.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Meal</TableHead>
+                      <TableHead>Time Slot</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {bookings.map((booking) => (
+                      <TableRow key={booking.id}>
+                        <TableCell>{formatDate(booking.booking_date)}</TableCell>
+                        <TableCell className="capitalize">{booking.meal_type}</TableCell>
+                        <TableCell>{booking.time_slot}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="text-center py-4 text-gray-500">
+                  You haven't made any bookings yet.
+                </div>
+              )}
+            </CardContent>
           </Card>
         </div>
       </div>

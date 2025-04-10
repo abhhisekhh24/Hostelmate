@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -7,15 +7,70 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from '@/components/ui/use-toast';
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
+type Complaint = {
+  id: string;
+  subject: string;
+  category: string;
+  description: string;
+  status: string;
+  created_at: string;
+}
 
 const Complaints = () => {
   const [subject, setSubject] = useState('');
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
+  const [complaints, setComplaints] = useState<Complaint[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (user) {
+      fetchComplaints();
+    }
+  }, [user]);
+
+  const fetchComplaints = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('complaints')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      if (data) {
+        setComplaints(data as Complaint[]);
+      }
+    } catch (error: any) {
+      console.error('Error fetching complaints:', error.message);
+      toast({
+        title: "Error fetching complaints",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to submit a complaint.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     if (!subject || !category || !description) {
       toast({
@@ -26,16 +81,69 @@ const Complaints = () => {
       return;
     }
 
-    // In a real app, this would send the complaint data to an API
-    toast({
-      title: "Complaint Submitted",
-      description: "Your complaint has been submitted successfully. We'll look into it as soon as possible.",
-    });
+    try {
+      setIsLoading(true);
+      
+      const { data, error } = await supabase
+        .from('complaints')
+        .insert([
+          { 
+            user_id: user.id,
+            subject, 
+            category, 
+            description,
+            status: 'pending'
+          }
+        ])
+        .select();
 
-    // Reset form
-    setSubject('');
-    setCategory('');
-    setDescription('');
+      if (error) throw error;
+
+      toast({
+        title: "Complaint Submitted",
+        description: "Your complaint has been submitted successfully. We'll look into it as soon as possible.",
+      });
+
+      // Refresh complaints list
+      fetchComplaints();
+      
+      // Reset form
+      setSubject('');
+      setCategory('');
+      setDescription('');
+    } catch (error: any) {
+      console.error('Error submitting complaint:', error.message);
+      toast({
+        title: "Submission Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Format date to a more readable format
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  // Get the status color
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'resolved':
+        return 'bg-green-100 text-green-800';
+      case 'in_progress':
+        return 'bg-blue-100 text-blue-800';
+      case 'pending':
+      default:
+        return 'bg-yellow-100 text-yellow-800';
+    }
   };
 
   return (
@@ -95,10 +203,50 @@ const Complaints = () => {
               <Button 
                 onClick={handleSubmit}
                 className="w-full bg-mess-600 hover:bg-mess-700"
+                disabled={isLoading}
               >
-                Submit Complaint
+                {isLoading ? 'Submitting...' : 'Submit Complaint'}
               </Button>
             </CardFooter>
+          </Card>
+          
+          {/* Display Complaints History */}
+          <Card className="mt-8">
+            <CardHeader>
+              <CardTitle>My Complaints History</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {complaints.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Subject</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {complaints.map((complaint) => (
+                      <TableRow key={complaint.id}>
+                        <TableCell>{formatDate(complaint.created_at)}</TableCell>
+                        <TableCell>{complaint.subject}</TableCell>
+                        <TableCell>{complaint.category}</TableCell>
+                        <TableCell>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(complaint.status)}`}>
+                            {complaint.status.replace('_', ' ')}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="text-center py-4 text-gray-500">
+                  You haven't submitted any complaints yet.
+                </div>
+              )}
+            </CardContent>
           </Card>
         </div>
         
