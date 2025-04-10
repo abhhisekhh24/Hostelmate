@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { Database } from '@/integrations/supabase/types';
 
 type User = {
   id: string;
@@ -52,6 +53,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (profileError) {
       console.error('Error fetching user profile:', profileError);
+      return null;
+    }
+
+    // Safety check if profileData is null
+    if (!profileData) {
+      console.error('No profile data found for user:', supabaseUser.id);
       return null;
     }
 
@@ -198,7 +205,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     try {
       // Prepare the updates for the profiles table format
-      const profileUpdates: any = {};
+      const profileUpdates: Record<string, any> = {};
       
       if (updates.name) profileUpdates.name = updates.name;
       if (updates.phoneNumber) profileUpdates.phone_number = updates.phoneNumber;
