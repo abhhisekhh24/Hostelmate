@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -28,9 +28,16 @@ const Register = () => {
     password?: string;
   }>({});
   
-  const { register } = useAuth();
+  const { register, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // If user is already logged in, redirect to dashboard
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
 
   const validateForm = () => {
     const newValidationErrors: {
@@ -38,24 +45,28 @@ const Register = () => {
       phoneNumber?: string;
       password?: string;
     } = {};
+    let isValid = true;
     
     // Validate registration number
     if (regNumber.length !== 10 || !/^\d+$/.test(regNumber)) {
       newValidationErrors.regNumber = "Registration number must be 10 digits";
+      isValid = false;
     }
     
     // Validate phone number if provided
     if (phoneNumber && (phoneNumber.length !== 10 || !/^\d+$/.test(phoneNumber))) {
       newValidationErrors.phoneNumber = "Phone number must be 10 digits";
+      isValid = false;
     }
     
     // Validate password has at least one uppercase, one lowercase and one special character
     if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?])/.test(password)) {
       newValidationErrors.password = "Password must contain at least one uppercase letter, one lowercase letter, and one special character";
+      isValid = false;
     }
     
     setValidationErrors(newValidationErrors);
-    return Object.keys(newValidationErrors).length === 0;
+    return isValid;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -80,9 +91,18 @@ const Register = () => {
     try {
       setIsRegistering(true);
       await register(name, email, password, roomNumber, regNumber, phoneNumber);
-      navigate('/dashboard');
+      // Don't navigate here - the useEffect will handle this when user state updates
+      toast({
+        title: "Registration successful",
+        description: "Welcome to the Hostel Mess Management System",
+      });
     } catch (err: any) {
-      setError(err.message || 'Registration failed. Please try again.');
+      console.error('Registration error:', err);
+      if (err.message.includes('already registered')) {
+        setError('This email is already registered. Please login instead.');
+      } else {
+        setError(err.message || 'Registration failed. Please try again.');
+      }
     } finally {
       setIsRegistering(false);
     }

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -18,9 +18,16 @@ const Login = () => {
   const [error, setError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // If user is already logged in, redirect to dashboard
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,9 +41,16 @@ const Login = () => {
     try {
       setIsLoggingIn(true);
       await login(email, password);
-      navigate('/dashboard');
+      // Don't navigate here - the useEffect will handle this when user state updates
     } catch (err: any) {
-      setError(err.message || 'Invalid credentials');
+      console.error('Login error:', err);
+      if (err.message.includes('Invalid login credentials')) {
+        setError('Invalid email or password');
+      } else if (err.message.includes('Email not confirmed')) {
+        setError('Please confirm your email before logging in');
+      } else {
+        setError(err.message || 'Failed to login. Please try again.');
+      }
     } finally {
       setIsLoggingIn(false);
     }
