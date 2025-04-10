@@ -60,13 +60,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       // In a real app, this would be an API call to authenticate
       // For now, we'll simulate authentication
-      if (email === 'demo@example.com' && password === 'password' && regNumber === 'REG123') {
+      if (email === 'demo@example.com' && password === 'Password1!' && regNumber === '1234567890') {
         const userData: User = {
           id: '1',
           name: 'Demo User',
           email: 'demo@example.com',
           roomNumber: 'A-101',
-          regNumber: 'REG123',
+          regNumber: '1234567890',
           phoneNumber: '9876543210',
           theme: 'light',
         };

@@ -17,16 +17,46 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [regNumber, setRegNumber] = useState('');
   const [error, setError] = useState('');
+  const [validationErrors, setValidationErrors] = useState<{
+    regNumber?: string;
+    password?: string;
+  }>({});
+  
   const { login } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const validateForm = () => {
+    const newValidationErrors: {
+      regNumber?: string;
+      password?: string;
+    } = {};
+    
+    // Validate registration number
+    if (regNumber.length !== 10 || !/^\d+$/.test(regNumber)) {
+      newValidationErrors.regNumber = "Registration number must be 10 digits";
+    }
+    
+    // Validate password has at least one uppercase, one lowercase and one special character
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?])/.test(password)) {
+      newValidationErrors.password = "Password must contain at least one uppercase letter, one lowercase letter, and one special character";
+    }
+    
+    setValidationErrors(newValidationErrors);
+    return Object.keys(newValidationErrors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setValidationErrors({});
     
     if (!email || !password || !regNumber) {
       setError('Please fill in all fields');
+      return;
+    }
+
+    if (!validateForm()) {
       return;
     }
 
@@ -79,11 +109,14 @@ const Login = () => {
               <Label htmlFor="regNumber">Registration Number</Label>
               <Input 
                 id="regNumber" 
-                placeholder="REG123" 
+                placeholder="10-digit number" 
                 value={regNumber}
                 onChange={(e) => setRegNumber(e.target.value)}
                 className="border-mess-200 focus:border-mess-400 dark:border-mess-700 dark:focus:border-mess-500"
               />
+              {validationErrors.regNumber && (
+                <p className="text-xs text-red-500 mt-1">{validationErrors.regNumber}</p>
+              )}
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
@@ -99,6 +132,9 @@ const Login = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 className="border-mess-200 focus:border-mess-400 dark:border-mess-700 dark:focus:border-mess-500"
               />
+              {validationErrors.password && (
+                <p className="text-xs text-red-500 mt-1">{validationErrors.password}</p>
+              )}
             </div>
             <Button type="submit" className="w-full bg-mess-600 hover:bg-mess-700 dark:bg-mess-500 dark:hover:bg-mess-600 transition-colors duration-200">
               Sign in
