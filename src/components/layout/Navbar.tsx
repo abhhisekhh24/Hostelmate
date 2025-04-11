@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -25,7 +24,8 @@ import {
   Calendar,
   Home,
   Moon,
-  Sun
+  Sun,
+  Shield
 } from 'lucide-react';
 
 const Navbar = () => {
@@ -55,6 +55,8 @@ const Navbar = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
+  const isAdmin = user?.email?.includes('admin');
+
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: <Home className="h-4 w-4 mr-2" /> },
     { name: 'Food Menu', path: '/menu', icon: <FileText className="h-4 w-4 mr-2" /> },
@@ -62,20 +64,19 @@ const Navbar = () => {
     { name: 'Feedback', path: '/feedback', icon: <MessageSquare className="h-4 w-4 mr-2" /> },
     { name: 'Complaints', path: '/complaints', icon: <MessageSquare className="h-4 w-4 mr-2" /> },
     { name: 'Help Desk', path: '/help-desk', icon: <HelpCircle className="h-4 w-4 mr-2" /> },
+    ...(isAdmin ? [{ name: 'Admin Panel', path: '/admin', icon: <Shield className="h-4 w-4 mr-2" /> }] : []),
   ];
 
   return (
     <nav className="bg-white dark:bg-mess-black shadow-md">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
-          {/* Logo and brand */}
           <div className="flex items-center">
             <Link to="/dashboard" className="flex items-center">
               <span className="text-xl font-bold text-mess-700 dark:text-mess-300">HostelChow</span>
             </Link>
           </div>
 
-          {/* Current time display */}
           <div className="hidden md:flex items-center bg-mess-100 dark:bg-mess-900 rounded-full px-4 py-1">
             <Clock className="h-4 w-4 text-mess-600 dark:text-mess-400 mr-2" />
             <span className="text-sm text-mess-700 dark:text-mess-300">
@@ -83,7 +84,6 @@ const Navbar = () => {
             </span>
           </div>
 
-          {/* Desktop navigation */}
           <div className="hidden md:flex space-x-4">
             {user && navItems.map((item) => (
               <Link 
@@ -101,7 +101,6 @@ const Navbar = () => {
             ))}
           </div>
 
-          {/* User menu */}
           <div className="hidden md:flex items-center">
             {user ? (
               <DropdownMenu>
@@ -160,7 +159,6 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Mobile menu button */}
           <div className="md:hidden flex items-center">
             <button
               onClick={toggleMenu}
@@ -176,7 +174,6 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile menu */}
       {isMenuOpen && (
         <div className="md:hidden bg-white dark:bg-mess-black-light py-2 px-4 shadow-lg">
           <div className="flex items-center bg-mess-100 dark:bg-mess-900 rounded-full px-4 py-1 mb-4">
@@ -201,7 +198,6 @@ const Navbar = () => {
                 </div>
               </div>
               
-              {/* Navigation Items */}
               {navItems.map((item) => (
                 <Link
                   key={item.name}
@@ -219,7 +215,6 @@ const Navbar = () => {
                 </Link>
               ))}
               
-              {/* Profile & Settings */}
               <div className="border-t mt-3 pt-3">
                 <Link
                   to="/profile"
@@ -258,7 +253,6 @@ const Navbar = () => {
                 </button>
               </div>
               
-              {/* Logout */}
               <button
                 onClick={() => {
                   handleLogout();

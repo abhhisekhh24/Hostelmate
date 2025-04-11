@@ -21,6 +21,14 @@ const HelpDesk = lazy(() => import("./pages/HelpDesk"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Index = lazy(() => import("./pages/Index"));
 
+// Admin pages
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const MenuManagement = lazy(() => import("./pages/admin/MenuManagement"));
+const FeedbackManagement = lazy(() => import("./pages/admin/FeedbackManagement"));
+const MenuSchedule = lazy(() => import("./pages/admin/MenuSchedule"));
+const UserManagement = lazy(() => import("./pages/admin/UserManagement"));
+const Announcements = lazy(() => import("./pages/admin/Announcements"));
+
 // Non-lazy load Layout as it's used by multiple routes
 import Layout from "./components/layout/Layout";
 
@@ -118,6 +126,56 @@ const App = () => {
                   element={
                     <Layout requireAuth>
                       <HelpDesk />
+                    </Layout>
+                  }
+                />
+                
+                {/* Admin Routes */}
+                <Route
+                  path="/admin"
+                  element={
+                    <Layout requireAuth>
+                      <AdminDashboard />
+                    </Layout>
+                  }
+                />
+                <Route
+                  path="/admin/menu-management"
+                  element={
+                    <Layout requireAuth>
+                      <MenuManagement />
+                    </Layout>
+                  }
+                />
+                <Route
+                  path="/admin/feedback-management"
+                  element={
+                    <Layout requireAuth>
+                      <FeedbackManagement />
+                    </Layout>
+                  }
+                />
+                <Route
+                  path="/admin/menu-schedule"
+                  element={
+                    <Layout requireAuth>
+                      <MenuSchedule />
+                    </Layout>
+                  }
+                />
+                <Route
+                  path="/admin/user-management"
+                  element={
+                    <Layout requireAuth>
+                      <UserManagement />
+                    </Layout>
+                  }
+                />
+                <Route
+                  path="/admin/announcements"
+                  element={
+                    <Layout requireAuth>
+                      <Announcements />
                     </Layout>
                   }
                 />
