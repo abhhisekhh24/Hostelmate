@@ -1,33 +1,41 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CalendarDays, Utensils, MessageSquare, Clock } from "lucide-react";
 import { useAuth } from '@/contexts/AuthContext';
-
 const Dashboard = () => {
-  const { user } = useAuth();
+  const {
+    user
+  } = useAuth();
   const currentDate = new Date();
-  
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     });
   };
 
   // For a realistic app, these would come from an API
-  const todaysMeals = [
-    { name: 'Breakfast', time: '7:30 AM - 9:00 AM', menu: 'Bread, Eggs, Cereal, Milk, Fruits' },
-    { name: 'Lunch', time: '12:30 PM - 2:00 PM', menu: 'Rice, Dal, Paneer Curry, Salad, Yogurt' },
-    { name: 'Snacks', time: '4:30 PM - 5:30 PM', menu: 'Samosa, Tea/Coffee' },
-    { name: 'Dinner', time: '7:30 PM - 9:00 PM', menu: 'Chapati, Mixed Vegetables, Chicken Curry, Rice, Ice Cream' }
-  ];
-
-  return (
-    <div className="container mx-auto px-4 py-8">
+  const todaysMeals = [{
+    name: 'Breakfast',
+    time: '7:30 AM - 9:00 AM',
+    menu: 'Bread, Eggs, Cereal, Milk, Fruits'
+  }, {
+    name: 'Lunch',
+    time: '12:30 PM - 2:00 PM',
+    menu: 'Rice, Dal, Paneer Curry, Salad, Yogurt'
+  }, {
+    name: 'Snacks',
+    time: '4:30 PM - 5:30 PM',
+    menu: 'Samosa, Tea/Coffee'
+  }, {
+    name: 'Dinner',
+    time: '7:30 PM - 9:00 PM',
+    menu: 'Chapati, Mixed Vegetables, Chicken Curry, Rice, Ice Cream'
+  }];
+  return <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Hello, {user?.name}</h1>
         <p className="text-gray-600 mt-1">{formatDate(currentDate)}</p>
@@ -86,11 +94,10 @@ const Dashboard = () => {
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-gray-900 mb-4">Today's Meals</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {todaysMeals.map((meal, index) => (
-            <Card key={index} className="bg-white">
+          {todaysMeals.map((meal, index) => <Card key={index} className="bg-white">
               <CardHeader className="pb-2">
                 <div className="flex justify-between items-center">
-                  <CardTitle className="text-lg font-medium">{meal.name}</CardTitle>
+                  <CardTitle className="text-lg font-medium text-gray-950">{meal.name}</CardTitle>
                   <div className="flex items-center text-sm text-gray-500">
                     <Clock className="h-4 w-4 mr-1" />
                     {meal.time}
@@ -108,12 +115,9 @@ const Dashboard = () => {
                   </Link>
                 </div>
               </CardContent>
-            </Card>
-          ))}
+            </Card>)}
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default Dashboard;
