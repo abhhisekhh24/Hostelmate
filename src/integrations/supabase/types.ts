@@ -9,6 +9,38 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_responses: {
+        Row: {
+          admin_id: string
+          created_at: string
+          feedback_id: string
+          id: string
+          response: string
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string
+          feedback_id: string
+          id?: string
+          response: string
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string
+          feedback_id?: string
+          id?: string
+          response?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_responses_feedback_id_fkey"
+            columns: ["feedback_id"]
+            isOneToOne: false
+            referencedRelation: "feedbacks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       complaints: {
         Row: {
           category: string
@@ -99,6 +131,36 @@ export type Database = {
         }
         Relationships: []
       }
+      menu_items: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+          vegetarian: boolean
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          vegetarian?: boolean
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          vegetarian?: boolean
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar: string | null
@@ -131,6 +193,36 @@ export type Database = {
           reg_number?: string
           room_number?: string
           theme?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      scheduled_menus: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          items: Json
+          meal_type: string
+          published: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          items: Json
+          meal_type: string
+          published?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          items?: Json
+          meal_type?: string
+          published?: boolean
           updated_at?: string
         }
         Relationships: []
