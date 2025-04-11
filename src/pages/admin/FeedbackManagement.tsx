@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 type Feedback = {
   id: string;
   user_id: string;
+  user_profile_id?: string | null;
   meal_type: string;
   rating: string;
   comment: string | null;
@@ -40,6 +41,8 @@ type Feedback = {
   user?: {
     name: string;
     room_number: string;
+    reg_number: string;
+    phone_number?: string | null;
   };
   status?: 'pending' | 'in-progress' | 'resolved';
   response?: string;
@@ -94,7 +97,7 @@ const FeedbackManagement = () => {
       const userIds = [...new Set(feedbacks.map(fb => fb.user_id))];
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, name, room_number')
+        .select('id, name, room_number, reg_number, phone_number')
         .in('id', userIds);
       
       if (profilesError) throw profilesError;
@@ -156,6 +159,46 @@ const FeedbackManagement = () => {
       });
     }
   });
+
+  useEffect(() => {
+    // Subscribe to realtime updates for feedbacks and admin_responses
+    const feedbackChannel = supabase
+      .channel('feedback-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'feedbacks'
+        },
+        () => {
+          // Refetch data when feedbacks change
+          queryClient.invalidateQueries({ queryKey: ['feedbacks'] });
+        }
+      )
+      .subscribe();
+
+    const responseChannel = supabase
+      .channel('admin-response-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'admin_responses'
+        },
+        () => {
+          // Refetch data when responses change
+          queryClient.invalidateQueries({ queryKey: ['feedbacks'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(feedbackChannel);
+      supabase.removeChannel(responseChannel);
+    };
+  }, [queryClient]);
 
   const handleSendResponse = () => {
     if (!selectedFeedback || !responseText.trim()) return;
@@ -221,6 +264,7 @@ const FeedbackManagement = () => {
       fb.meal_type.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (fb.comment || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
       (fb.user?.room_number || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (fb.user?.reg_number || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
       fb.rating.toLowerCase().includes(searchQuery.toLowerCase());
     
     if (activeTab === 'all') return matchesSearch;
@@ -289,6 +333,7 @@ const FeedbackManagement = () => {
                             <TableCell className="font-medium">
                               {feedback.user?.name || 'Unknown User'}
                               <div className="text-xs text-gray-500">Room {feedback.user?.room_number || 'N/A'}</div>
+                              <div className="text-xs text-gray-500">Reg# {feedback.user?.reg_number || 'N/A'}</div>
                             </TableCell>
                             <TableCell>{feedback.meal_type}</TableCell>
                             <TableCell>{formatDate(feedback.created_at)}</TableCell>
@@ -332,8 +377,18 @@ const FeedbackManagement = () => {
                       <h3 className="font-medium">{selectedFeedback.meal_type} Feedback</h3>
                       <p className="text-sm text-gray-500">
                         From: {selectedFeedback.user?.name || 'Unknown'} 
-                        ({selectedFeedback.user?.room_number || 'N/A'})
                       </p>
+                      <p className="text-sm text-gray-500">
+                        Room: {selectedFeedback.user?.room_number || 'N/A'}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        Reg#: {selectedFeedback.user?.reg_number || 'N/A'}
+                      </p>
+                      {selectedFeedback.user?.phone_number && (
+                        <p className="text-sm text-gray-500">
+                          Phone: {selectedFeedback.user.phone_number}
+                        </p>
+                      )}
                     </div>
                     <div>
                       {getStatusBadge(selectedFeedback.status || 'pending')}

@@ -21,6 +21,18 @@ type ScheduledMenu = {
   published: boolean;
 };
 
+// Define type for daily menu
+type DailyMenu = {
+  id: string;
+  date: string;
+  breakfast: string | null;
+  lunch: string | null;
+  snacks: string | null;
+  dinner: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 // Helper to determine the current day
 const getCurrentDay = () => {
   const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
@@ -82,9 +94,10 @@ const fallbackWeeklyMenu = {
 
 const FoodMenu = () => {
   const [activeDay, setActiveDay] = useState(getCurrentDay());
+  const [todayMenu, setTodayMenu] = useState<DailyMenu | null>(null);
   
   // Fetch scheduled menus from Supabase
-  const { data: scheduledMenus = [], isLoading } = useQuery({
+  const { data: scheduledMenus = [], isLoading: isLoadingScheduled } = useQuery({
     queryKey: ['scheduledMenus'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -98,9 +111,58 @@ const FoodMenu = () => {
         return [];
       }
       
-      return data as ScheduledMenu[];
+      return data as unknown as ScheduledMenu[];
     }
   });
+
+  // Fetch today's daily menu
+  const { data: dailyMenu, isLoading: isLoadingDaily } = useQuery({
+    queryKey: ['dailyMenu'],
+    queryFn: async () => {
+      const today = getTodayDateString();
+      const { data, error } = await supabase
+        .from('daily_menus')
+        .select('*')
+        .eq('date', today)
+        .maybeSingle();
+      
+      if (error) {
+        console.error('Error fetching today\'s menu:', error);
+        return null;
+      }
+      
+      return data as DailyMenu | null;
+    }
+  });
+
+  useEffect(() => {
+    if (dailyMenu) {
+      setTodayMenu(dailyMenu);
+    }
+
+    // Setup realtime subscription for daily menu updates
+    const channel = supabase
+      .channel('daily-menu-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'daily_menus',
+          filter: `date=eq.${getTodayDateString()}`
+        },
+        (payload) => {
+          if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
+            setTodayMenu(payload.new as DailyMenu);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [dailyMenu]);
 
   // Group menus by day of the week
   const menusByDay = React.useMemo(() => {
@@ -152,9 +214,30 @@ const FoodMenu = () => {
         }
       });
     }
+
+    // If we have today's specific menu from daily_menus, override it
+    if (todayMenu) {
+      const today = new Date();
+      const dayName = days[today.getDay()];
+      
+      if (todayMenu.breakfast) {
+        grouped[dayName].breakfast = todayMenu.breakfast;
+      }
+      if (todayMenu.lunch) {
+        grouped[dayName].lunch = todayMenu.lunch;
+      }
+      if (todayMenu.snacks) {
+        grouped[dayName].snacks = todayMenu.snacks;
+      }
+      if (todayMenu.dinner) {
+        grouped[dayName].dinner = todayMenu.dinner;
+      }
+    }
     
     return grouped;
-  }, [scheduledMenus]);
+  }, [scheduledMenus, todayMenu]);
+
+  const isLoading = isLoadingScheduled || isLoadingDaily;
 
   return (
     <div className="container mx-auto px-4 py-8">

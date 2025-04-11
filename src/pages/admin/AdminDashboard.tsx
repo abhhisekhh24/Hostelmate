@@ -8,9 +8,11 @@ import {
   MessageSquare, 
   FileText, 
   Users, 
-  Bell 
+  Bell,
+  Utensils 
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import DailyMenuEditor from '@/components/DailyMenuEditor';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -25,7 +27,7 @@ const AdminDashboard = () => {
   const adminCards = [
     {
       title: "Menu Management",
-      description: "Create and update daily/weekly food menus",
+      description: "Create and update food items",
       icon: <FileText className="h-6 w-6 text-mess-600" />,
       link: "/admin/menu-management"
     },
@@ -62,20 +64,28 @@ const AdminDashboard = () => {
         <p className="text-gray-600 dark:text-gray-400 mt-1">Manage your hostel mess operations</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {adminCards.map((card, index) => (
-          <Link key={index} to={card.link} className="block">
-            <Card className="h-full hover:shadow-md transition-shadow">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-lg font-medium">{card.title}</CardTitle>
-                {card.icon}
-              </CardHeader>
-              <CardContent>
-                <CardDescription>{card.description}</CardDescription>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {adminCards.map((card, index) => (
+              <Link key={index} to={card.link} className="block">
+                <Card className="h-full hover:shadow-md transition-shadow">
+                  <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <CardTitle className="text-lg font-medium">{card.title}</CardTitle>
+                    {card.icon}
+                  </CardHeader>
+                  <CardContent>
+                    <CardDescription>{card.description}</CardDescription>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <DailyMenuEditor />
+        </div>
       </div>
     </div>
   );

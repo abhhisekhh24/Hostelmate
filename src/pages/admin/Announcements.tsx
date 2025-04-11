@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,17 +22,32 @@ import {
   Clock,
   Eye,
   Calendar,
-  Search
+  Search,
+  Loader2
 } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { format } from 'date-fns';
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
+type Announcement = {
+  id: string;
+  title: string;
+  content: string;
+  priority: string;
+  created_at: string;
+  created_by: string;
+  expires_at: string | null;
+  is_active: boolean;
+};
 
 const Announcements = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   
@@ -40,126 +55,176 @@ const Announcements = () => {
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [announcementType, setAnnouncementType] = useState('general');
-  
-  // Sample announcements data
-  const [announcements, setAnnouncements] = useState([
-    { 
-      id: 1, 
-      title: 'Menu Changes for Next Week', 
-      content: 'Due to supply constraints, the mess menu will be slightly modified next week. Please check the updated menu.', 
-      type: 'menu',
-      date: '2025-04-10',
-      status: 'active' 
-    },
-    { 
-      id: 2, 
-      title: 'Mess Timing Change for Festival', 
-      content: 'Please note that mess timings will be adjusted during the upcoming festival days. Breakfast: 8-9:30 AM, Lunch: 1-2:30 PM, Dinner: 8-10 PM', 
-      type: 'timing',
-      date: '2025-04-09',
-      status: 'scheduled' 
-    },
-    { 
-      id: 3, 
-      title: 'Special Dinner on Saturday', 
-      content: 'We are pleased to announce a special dinner on Saturday to celebrate the end of semester. The menu includes various delicacies and desserts.', 
-      type: 'event',
-      date: '2025-04-08',
-      status: 'active' 
-    },
-    { 
-      id: 4, 
-      title: 'Feedback Session', 
-      content: 'We will be conducting a feedback session on Friday at 5 PM in the common room. Please join us to share your thoughts on improving mess services.', 
-      type: 'general',
-      date: '2025-04-07',
-      status: 'expired' 
-    },
-    { 
-      id: 5, 
-      title: 'Maintenance Notice', 
-      content: 'The kitchen will undergo maintenance on Sunday morning. Breakfast will be served as packed meals.', 
-      type: 'general',
-      date: '2025-04-06',
-      status: 'expired' 
-    },
-  ]);
+  const [priority, setPriority] = useState('normal');
+  const [expiryDate, setExpiryDate] = useState('');
   
   // Check if user is admin
-  const isAdmin = user?.email?.includes('admin');
+  const isAdmin = user?.isAdmin || user?.email?.includes('admin');
   
   if (!isAdmin) {
     return <Navigate to="/dashboard" replace />;
   }
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'menu':
-        return <Badge className="bg-blue-500">Menu</Badge>;
-      case 'timing':
-        return <Badge className="bg-purple-500">Timing</Badge>;
-      case 'event':
-        return <Badge className="bg-green-500">Event</Badge>;
-      case 'general':
-      default:
-        return <Badge className="bg-gray-500">General</Badge>;
+  // Fetch announcements
+  const { data: announcements = [], isLoading } = useQuery({
+    queryKey: ['announcements'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('announcements')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        throw error;
+      }
+      
+      return data as Announcement[];
     }
-  };
+  });
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'active':
-        return <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 border-green-200">
-          <CheckCircle className="h-3 w-3 mr-1" /> Active
-        </Badge>;
-      case 'scheduled':
-        return <Badge variant="outline" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 border-blue-200">
-          <Calendar className="h-3 w-3 mr-1" /> Scheduled
-        </Badge>;
-      case 'expired':
-        return <Badge variant="outline" className="bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200 border-gray-200">
-          <Clock className="h-3 w-3 mr-1" /> Expired
-        </Badge>;
-      default:
-        return <Badge variant="outline">Unknown</Badge>;
+  // Add announcement mutation
+  const addAnnouncement = useMutation({
+    mutationFn: async (newAnnouncement: Omit<Announcement, 'id' | 'created_at'>) => {
+      const { data, error } = await supabase
+        .from('announcements')
+        .insert([newAnnouncement])
+        .select();
+      
+      if (error) {
+        throw error;
+      }
+      
+      return data[0];
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['announcements'] });
+      resetForm();
+      toast({
+        title: "Announcement created",
+        description: "Your announcement has been published successfully."
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error creating announcement",
+        description: error.message,
+        variant: "destructive"
+      });
     }
+  });
+
+  // Delete announcement mutation
+  const deleteAnnouncement = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('announcements')
+        .delete()
+        .eq('id', id);
+      
+      if (error) {
+        throw error;
+      }
+      
+      return id;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['announcements'] });
+      toast({
+        title: "Announcement deleted",
+        description: "The announcement has been deleted successfully."
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error deleting announcement",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  const resetForm = () => {
+    setTitle('');
+    setContent('');
+    setPriority('normal');
+    setExpiryDate('');
+    setShowForm(false);
   };
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Add new announcement
+    if (!title.trim() || !content.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Title and content are required.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!user?.id) {
+      toast({
+        title: "Authentication Error",
+        description: "You must be logged in to create announcements.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     const newAnnouncement = {
-      id: Date.now(),
       title,
       content,
-      type: announcementType,
-      date: format(new Date(), 'yyyy-MM-dd'),
-      status: 'active'
+      priority,
+      created_by: user.id,
+      expires_at: expiryDate ? new Date(expiryDate).toISOString() : null,
+      is_active: true
     };
     
-    setAnnouncements([newAnnouncement, ...announcements]);
-    
-    // Reset form and hide it
-    setTitle('');
-    setContent('');
-    setAnnouncementType('general');
-    setShowForm(false);
-    
-    toast({
-      title: "Announcement created",
-      description: "Your announcement has been published successfully."
-    });
+    addAnnouncement.mutate(newAnnouncement);
   };
 
-  const handleDelete = (id: number) => {
-    setAnnouncements(announcements.filter(announcement => announcement.id !== id));
+  const handleDelete = (id: string) => {
+    if (window.confirm("Are you sure you want to delete this announcement?")) {
+      deleteAnnouncement.mutate(id);
+    }
+  };
+
+  const getTypeIcon = (priority: string) => {
+    switch (priority) {
+      case 'urgent':
+        return <Badge className="bg-red-500">Urgent</Badge>;
+      case 'important':
+        return <Badge className="bg-amber-500">Important</Badge>;
+      case 'normal':
+      default:
+        return <Badge className="bg-blue-500">Normal</Badge>;
+    }
+  };
+
+  const getStatusBadge = (announcement: Announcement) => {
+    const now = new Date();
+    const expiryDate = announcement.expires_at ? new Date(announcement.expires_at) : null;
     
-    toast({
-      title: "Announcement deleted",
-      description: "The announcement has been deleted successfully."
-    });
+    if (!announcement.is_active) {
+      return <Badge variant="outline" className="bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200 border-gray-200">
+        <Clock className="h-3 w-3 mr-1" /> Inactive
+      </Badge>;
+    } else if (expiryDate && expiryDate < now) {
+      return <Badge variant="outline" className="bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200 border-gray-200">
+        <Clock className="h-3 w-3 mr-1" /> Expired
+      </Badge>;
+    } else {
+      return <Badge variant="outline" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 border-green-200">
+        <CheckCircle className="h-3 w-3 mr-1" /> Active
+      </Badge>;
+    }
+  };
+
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return format(date, 'yyyy-MM-dd');
   };
 
   // Filter announcements based on search query and status filter
@@ -168,8 +233,15 @@ const Announcements = () => {
       announcement.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       announcement.content.toLowerCase().includes(searchQuery.toLowerCase());
     
+    const now = new Date();
+    const expiryDate = announcement.expires_at ? new Date(announcement.expires_at) : null;
+    
     if (filterStatus === 'all') return matchesSearch;
-    return matchesSearch && announcement.status === filterStatus;
+    if (filterStatus === 'active') return matchesSearch && announcement.is_active && (!expiryDate || expiryDate >= now);
+    if (filterStatus === 'expired') return matchesSearch && (expiryDate && expiryDate < now);
+    if (filterStatus === 'inactive') return matchesSearch && !announcement.is_active;
+    
+    return matchesSearch;
   });
 
   return (
@@ -209,18 +281,28 @@ const Announcements = () => {
               </div>
               
               <div className="space-y-2">
-                <label htmlFor="type" className="block text-sm font-medium">Type</label>
-                <Select value={announcementType} onValueChange={setAnnouncementType}>
+                <label htmlFor="priority" className="block text-sm font-medium">Priority</label>
+                <Select value={priority} onValueChange={setPriority}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
+                    <SelectValue placeholder="Select priority" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="general">General</SelectItem>
-                    <SelectItem value="menu">Menu</SelectItem>
-                    <SelectItem value="timing">Timing</SelectItem>
-                    <SelectItem value="event">Event</SelectItem>
+                    <SelectItem value="normal">Normal</SelectItem>
+                    <SelectItem value="important">Important</SelectItem>
+                    <SelectItem value="urgent">Urgent</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="expiryDate" className="block text-sm font-medium">Expiry Date (Optional)</label>
+                <Input 
+                  id="expiryDate"
+                  type="date"
+                  value={expiryDate}
+                  onChange={(e) => setExpiryDate(e.target.value)}
+                  min={format(new Date(), 'yyyy-MM-dd')}
+                />
               </div>
               
               <div className="space-y-2">
@@ -246,7 +328,9 @@ const Announcements = () => {
                 <Button 
                   type="submit" 
                   className="bg-mess-600 hover:bg-mess-700"
+                  disabled={addAnnouncement.isPending}
                 >
+                  {addAnnouncement.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Publish Announcement
                 </Button>
               </div>
@@ -281,63 +365,72 @@ const Announcements = () => {
                 <SelectContent>
                   <SelectItem value="all">All Status</SelectItem>
                   <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="scheduled">Scheduled</SelectItem>
                   <SelectItem value="expired">Expired</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredAnnouncements.length > 0 ? (
-                  filteredAnnouncements.map((announcement) => (
-                    <TableRow key={announcement.id}>
-                      <TableCell className="font-medium">{announcement.title}</TableCell>
-                      <TableCell>{getTypeIcon(announcement.type)}</TableCell>
-                      <TableCell>{announcement.date}</TableCell>
-                      <TableCell>{getStatusBadge(announcement.status)}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end space-x-2">
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 text-red-500 hover:text-red-700"
-                            onClick={() => handleDelete(announcement.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-mess-600" />
+            </div>
+          ) : (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Priority</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Expires</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredAnnouncements.length > 0 ? (
+                    filteredAnnouncements.map((announcement) => (
+                      <TableRow key={announcement.id}>
+                        <TableCell className="font-medium">{announcement.title}</TableCell>
+                        <TableCell>{getTypeIcon(announcement.priority)}</TableCell>
+                        <TableCell>{formatDate(announcement.created_at)}</TableCell>
+                        <TableCell>{formatDate(announcement.expires_at)}</TableCell>
+                        <TableCell>{getStatusBadge(announcement)}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end space-x-2">
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-8 w-8 text-red-500 hover:text-red-700"
+                              onClick={() => handleDelete(announcement.id)}
+                              disabled={deleteAnnouncement.isPending}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                        No announcements found matching your search criteria.
                       </TableCell>
                     </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-gray-500">
-                      No announcements found matching your search criteria.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

@@ -41,6 +41,39 @@ export type Database = {
           },
         ]
       }
+      announcements: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          priority: string
+          title: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          created_by: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          priority?: string
+          title: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          priority?: string
+          title?: string
+        }
+        Relationships: []
+      }
       complaints: {
         Row: {
           category: string
@@ -74,6 +107,39 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_menus: {
+        Row: {
+          breakfast: string | null
+          created_at: string
+          date: string
+          dinner: string | null
+          id: string
+          lunch: string | null
+          snacks: string | null
+          updated_at: string
+        }
+        Insert: {
+          breakfast?: string | null
+          created_at?: string
+          date?: string
+          dinner?: string | null
+          id?: string
+          lunch?: string | null
+          snacks?: string | null
+          updated_at?: string
+        }
+        Update: {
+          breakfast?: string | null
+          created_at?: string
+          date?: string
+          dinner?: string | null
+          id?: string
+          lunch?: string | null
+          snacks?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       feedbacks: {
         Row: {
           comment: string | null
@@ -82,6 +148,7 @@ export type Database = {
           meal_type: string
           rating: string
           user_id: string
+          user_profile_id: string | null
         }
         Insert: {
           comment?: string | null
@@ -90,6 +157,7 @@ export type Database = {
           meal_type: string
           rating: string
           user_id: string
+          user_profile_id?: string | null
         }
         Update: {
           comment?: string | null
@@ -98,8 +166,17 @@ export type Database = {
           meal_type?: string
           rating?: string
           user_id?: string
+          user_profile_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "feedbacks_user_profile_id_fkey"
+            columns: ["user_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       meal_bookings: {
         Row: {
