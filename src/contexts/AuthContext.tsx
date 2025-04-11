@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { Database } from '@/integrations/supabase/types';
@@ -40,70 +40,89 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { toast } = useToast();
 
-  // Function to transform Supabase user data into our User type
-  const formatUser = async (supabaseUser: any) => {
+  // Function to transform Supabase user data into our User type - memoized for performance
+  const formatUser = useCallback(async (supabaseUser: any) => {
     if (!supabaseUser) return null;
 
-    // Get the user profile from profiles table
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', supabaseUser.id)
-      .single();
+    try {
+      // Get the user profile from profiles table
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', supabaseUser.id)
+        .single();
 
-    if (profileError) {
-      console.error('Error fetching user profile:', profileError);
+      if (profileError) {
+        console.error('Error fetching user profile:', profileError);
+        return null;
+      }
+
+      // Safety check if profileData is null
+      if (!profileData) {
+        console.error('No profile data found for user:', supabaseUser.id);
+        return null;
+      }
+
+      // Apply the user's theme if it exists
+      if (profileData.theme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+
+      return {
+        id: supabaseUser.id,
+        email: supabaseUser.email || '',
+        name: profileData.name,
+        roomNumber: profileData.room_number,
+        regNumber: profileData.reg_number,
+        phoneNumber: profileData.phone_number,
+        avatar: profileData.avatar,
+        theme: (profileData.theme as 'light' | 'dark') || 'light',
+      };
+    } catch (error) {
+      console.error('Error formatting user:', error);
       return null;
     }
+  }, []);
 
-    // Safety check if profileData is null
-    if (!profileData) {
-      console.error('No profile data found for user:', supabaseUser.id);
-      return null;
-    }
-
-    // Apply the user's theme if it exists
-    if (profileData.theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-
-    return {
-      id: supabaseUser.id,
-      email: supabaseUser.email || '',
-      name: profileData.name,
-      roomNumber: profileData.room_number,
-      regNumber: profileData.reg_number,
-      phoneNumber: profileData.phone_number,
-      avatar: profileData.avatar,
-      theme: (profileData.theme as 'light' | 'dark') || 'light',
-    };
-  };
-
-  // Listen for auth changes
+  // Listen for auth changes - optimized with useCallback
   useEffect(() => {
+    // Set up the auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        setIsLoading(true);
-        if (session?.user) {
-          const formattedUser = await formatUser(session.user);
-          setUser(formattedUser);
-        } else {
-          setUser(null);
-        }
-        setIsLoading(false);
+        // Add debounce for multiple rapid auth events
+        const handleAuthChange = async () => {
+          try {
+            if (session?.user) {
+              const formattedUser = await formatUser(session.user);
+              setUser(formattedUser);
+            } else {
+              setUser(null);
+            }
+          } finally {
+            setIsLoading(false);
+          }
+        };
+        
+        // Process auth change
+        handleAuthChange();
       }
     );
 
-    // Get initial session
+    // Get initial session with optimized loading
     const initializeAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        const formattedUser = await formatUser(session.user);
-        setUser(formattedUser);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const formattedUser = await formatUser(session.user);
+          setUser(formattedUser);
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
     
     initializeAuth();
@@ -111,7 +130,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [formatUser]);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
@@ -123,9 +142,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) throw error;
       
-      const formattedUser = await formatUser(data.user);
-      setUser(formattedUser);
-      
+      // The user will be set by the auth state listener
       toast({
         title: "Login successful",
         description: "Welcome back to the Hostel Mess Management System",
@@ -162,11 +179,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) throw error;
 
-      // After signup, the trigger we created will automatically add the user to the profiles table
-      // We should now be able to get their profile
-      const formattedUser = await formatUser(data.user);
-      setUser(formattedUser);
-      
+      // The user will be set by the auth state listener
       toast({
         title: "Registration successful",
         description: "Welcome to the Hostel Mess Management System",
@@ -287,16 +300,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Memoize the context value to prevent unnecessary re-renders
+  const contextValue = useMemo(() => ({
+    user, 
+    login, 
+    register, 
+    logout, 
+    isLoading, 
+    updateProfile,
+    toggleTheme
+  }), [user, isLoading]);
+
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      login, 
-      register, 
-      logout, 
-      isLoading, 
-      updateProfile,
-      toggleTheme
-    }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

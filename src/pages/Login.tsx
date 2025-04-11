@@ -44,9 +44,9 @@ const Login = () => {
       // Don't navigate here - the useEffect will handle this when user state updates
     } catch (err: any) {
       console.error('Login error:', err);
-      if (err.message.includes('Invalid login credentials')) {
+      if (err.message?.includes('Invalid login credentials')) {
         setError('Invalid email or password');
-      } else if (err.message.includes('Email not confirmed')) {
+      } else if (err.message?.includes('Email not confirmed')) {
         setError('Please confirm your email before logging in');
       } else {
         setError(err.message || 'Failed to login. Please try again.');
@@ -58,7 +58,8 @@ const Login = () => {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-mess-100 to-mess-300 dark:from-mess-900 dark:to-mess-black-dark px-4 overflow-hidden">
-      <FoodIllustrations />
+      {/* Load FoodIllustrations component only when not in a login/loading state */}
+      {!isLoggingIn && <FoodIllustrations />}
       
       <Card className="w-full max-w-md shadow-lg backdrop-blur-sm bg-white/90 dark:bg-gray-900/90 border-mess-200 dark:border-mess-800 z-10">
         <CardHeader className="space-y-1">
@@ -87,6 +88,7 @@ const Login = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="border-mess-200 focus:border-mess-400 dark:border-mess-700 dark:focus:border-mess-500"
+                disabled={isLoggingIn}
               />
             </div>
             <div className="space-y-2">
@@ -102,6 +104,7 @@ const Login = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="border-mess-200 focus:border-mess-400 dark:border-mess-700 dark:focus:border-mess-500"
+                disabled={isLoggingIn}
               />
             </div>
             <Button 
