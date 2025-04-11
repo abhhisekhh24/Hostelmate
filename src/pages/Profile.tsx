@@ -100,17 +100,17 @@ const Profile = () => {
               
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
-                <div className="p-2 border rounded-md bg-violet-700">{user.email}</div>
+                <div className="p-2 border rounded-md bg-gray-800">{user.email}</div>
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="regNumber">Registration Number</Label>
-                <div className="p-2 border rounded-md bg-violet-700">{user.regNumber}</div>
+                <div className="p-2 border rounded-md bg-gray-800">{user.regNumber}</div>
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="roomNumber">Room Number</Label>
-                <div className="p-2 border rounded-md bg-violet-700">{user.roomNumber}</div>
+                <div className="p-2 border rounded-md bg-gray-800">{user.roomNumber}</div>
               </div>
               
               <div className="space-y-2">
