@@ -13,6 +13,7 @@ type User = {
   phoneNumber?: string;
   avatar?: string;
   theme?: 'light' | 'dark';
+  isAdmin?: boolean; // Added to explicitly track admin status
 };
 
 type AuthContextType = {
@@ -34,6 +35,9 @@ export const useAuth = () => {
   }
   return context;
 };
+
+// Define admin emails
+const ADMIN_EMAILS = ['hellofrom1000@gmail.com'];
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -70,6 +74,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         document.documentElement.classList.remove('dark');
       }
 
+      // Check if user email is in admin list
+      const isAdmin = ADMIN_EMAILS.includes(supabaseUser.email) || supabaseUser.email?.includes('admin');
+
       return {
         id: supabaseUser.id,
         email: supabaseUser.email || '',
@@ -79,6 +86,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         phoneNumber: profileData.phone_number,
         avatar: profileData.avatar,
         theme: (profileData.theme as 'light' | 'dark') || 'light',
+        isAdmin: isAdmin, // Set admin status based on email
       };
     } catch (error) {
       console.error('Error formatting user:', error);
@@ -163,6 +171,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (name: string, email: string, password: string, roomNumber: string, regNumber: string, phoneNumber?: string) => {
     setIsLoading(true);
     try {
+      // Check if the email is a known admin email
+      const isAdmin = ADMIN_EMAILS.includes(email) || email.includes('admin');
+      
       // Register the user with Supabase
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -173,6 +184,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             roomNumber,
             regNumber,
             phoneNumber,
+            isAdmin, // Store admin status in user metadata
           },
         },
       });
@@ -182,7 +194,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // The user will be set by the auth state listener
       toast({
         title: "Registration successful",
-        description: "Welcome to the Hostel Mess Management System",
+        description: isAdmin 
+          ? "Welcome to the Hostel Mess Management System with admin privileges" 
+          : "Welcome to the Hostel Mess Management System",
       });
     } catch (error: any) {
       console.error('Registration failed:', error.message);

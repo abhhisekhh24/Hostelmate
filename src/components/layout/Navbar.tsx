@@ -55,7 +55,7 @@ const Navbar = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
-  const isAdmin = user?.email?.includes('admin');
+  const isAdmin = user?.isAdmin || user?.email?.includes('admin');
 
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: <Home className="h-4 w-4 mr-2" /> },
@@ -121,6 +121,11 @@ const Navbar = () => {
                       <p className="text-xs leading-none text-muted-foreground">
                         {user.email}
                       </p>
+                      {isAdmin && (
+                        <p className="text-xs leading-none text-mess-600 dark:text-mess-400 mt-1">
+                          Administrator
+                        </p>
+                      )}
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />

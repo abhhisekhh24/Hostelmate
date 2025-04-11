@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -37,8 +36,8 @@ const MenuManagement = () => {
   
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Check if user is admin - you'll need to implement this check properly
-  const isAdmin = user?.email?.includes('admin');
+  // Updated admin check to use both the explicit isAdmin property and the email check for backward compatibility
+  const isAdmin = user?.isAdmin || user?.email?.includes('admin');
   
   if (!isAdmin) {
     return <Navigate to="/dashboard" replace />;
@@ -137,11 +136,24 @@ const MenuManagement = () => {
             </TabsContent>
             
             <TabsContent value="vegetarian">
-              {/* Similar table for vegetarian items */}
               <p className="text-muted-foreground">Filter shows vegetarian items only</p>
             </TabsContent>
             
-            {/* Add similar TabsContent for other tabs */}
+            <TabsContent value="non-vegetarian">
+              <p className="text-muted-foreground">Filter shows non-vegetarian items only</p>
+            </TabsContent>
+            
+            <TabsContent value="main">
+              <p className="text-muted-foreground">Filter shows main course items only</p>
+            </TabsContent>
+            
+            <TabsContent value="side">
+              <p className="text-muted-foreground">Filter shows side dish items only</p>
+            </TabsContent>
+            
+            <TabsContent value="dessert">
+              <p className="text-muted-foreground">Filter shows dessert items only</p>
+            </TabsContent>
           </Tabs>
         </CardContent>
       </Card>

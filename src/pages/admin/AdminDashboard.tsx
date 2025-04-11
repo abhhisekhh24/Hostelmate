@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from '@/contexts/AuthContext';
@@ -15,9 +14,8 @@ import { Link } from 'react-router-dom';
 const AdminDashboard = () => {
   const { user } = useAuth();
   
-  // Check if user is admin - you'll need to implement this check properly
-  // For now, this is a placeholder logic
-  const isAdmin = user?.email?.includes('admin');
+  // Updated admin check to use both the explicit isAdmin property and the email check for backward compatibility
+  const isAdmin = user?.isAdmin || user?.email?.includes('admin');
   
   if (!isAdmin) {
     return <Navigate to="/dashboard" replace />;
