@@ -5,9 +5,10 @@ import { UtensilsCrossed } from 'lucide-react';
 interface LogoProps {
   size?: 'sm' | 'md' | 'lg';
   showText?: boolean;
+  className?: string;
 }
 
-const Logo: React.FC<LogoProps> = ({ size = 'md', showText = true }) => {
+const Logo: React.FC<LogoProps> = ({ size = 'md', showText = true, className = '' }) => {
   const sizes = {
     sm: { icon: 16, text: 'text-lg' },
     md: { icon: 24, text: 'text-xl' },
@@ -15,7 +16,7 @@ const Logo: React.FC<LogoProps> = ({ size = 'md', showText = true }) => {
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className={`flex items-center gap-2 ${className}`}>
       <div className="relative">
         <UtensilsCrossed 
           className="text-mess-600 dark:text-mess-400" 
@@ -25,7 +26,7 @@ const Logo: React.FC<LogoProps> = ({ size = 'md', showText = true }) => {
       </div>
       {showText && (
         <span className={`font-bold ${sizes[size].text} bg-gradient-to-r from-mess-700 to-mess-500 dark:from-mess-400 dark:to-mess-600 bg-clip-text text-transparent`}>
-          HostelChow
+          HostelMate
         </span>
       )}
     </div>

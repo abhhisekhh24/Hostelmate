@@ -28,7 +28,7 @@ const Index = () => {
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-mess-100 to-mess-300 dark:from-mess-900 dark:to-mess-black-dark text-center p-4">
         <div className="space-y-6">
           <Logo size="lg" />
-          <h2 className="text-2xl font-bold text-mess-700 dark:text-mess-300">HostelChow</h2>
+          <h2 className="text-2xl font-bold text-mess-700 dark:text-mess-300">HostelMate</h2>
           <div className="flex justify-center">
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-mess-700 dark:border-mess-300"></div>
           </div>

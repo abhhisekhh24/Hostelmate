@@ -10,3 +10,37 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // import { supabase } from "@/integrations/supabase/client";
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+// Define additional table types for TypeScript until Database types get updated
+declare module '@supabase/supabase-js' {
+  interface Database {
+    public: {
+      Tables: {
+        announcements: {
+          Row: {
+            id: string;
+            title: string;
+            content: string;
+            priority: string;
+            created_at: string;
+            created_by: string;
+            expires_at: string | null;
+            is_active: boolean;
+          };
+        };
+        daily_menus: {
+          Row: {
+            id: string;
+            date: string;
+            breakfast: string | null;
+            lunch: string | null;
+            snacks: string | null;
+            dinner: string | null;
+            created_at: string;
+            updated_at: string;
+          };
+        };
+      };
+    };
+  }
+}

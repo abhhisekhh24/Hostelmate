@@ -78,7 +78,7 @@ const Announcements = () => {
         throw error;
       }
       
-      return data as Announcement[];
+      return data as unknown as Announcement[];
     }
   });
 
@@ -87,7 +87,7 @@ const Announcements = () => {
     mutationFn: async (newAnnouncement: Omit<Announcement, 'id' | 'created_at'>) => {
       const { data, error } = await supabase
         .from('announcements')
-        .insert([newAnnouncement])
+        .insert([newAnnouncement as any])
         .select();
       
       if (error) {

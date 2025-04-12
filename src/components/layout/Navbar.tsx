@@ -17,7 +17,7 @@ import AnnouncementsNotification from '../AnnouncementsNotification';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, signOut } = useAuth();
+  const { user, logout } = useAuth();
   const location = useLocation();
   const [theme, setTheme] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -55,7 +55,6 @@ const Navbar = () => {
             <div className="flex-shrink-0 flex items-center">
               <Link to="/" className="flex items-center">
                 <Logo className="h-8 w-auto" />
-                <span className="ml-2 text-xl font-bold text-gray-900 dark:text-white">MessMate</span>
               </Link>
             </div>
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
@@ -110,7 +109,7 @@ const Navbar = () => {
                       <Link to="/help-desk" className="w-full cursor-pointer">Help</Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={signOut} className="cursor-pointer">
+                    <DropdownMenuItem onClick={logout} className="cursor-pointer">
                       <LogOut className="mr-2 h-4 w-4" />
                       <span>Logout</span>
                     </DropdownMenuItem>
@@ -234,7 +233,7 @@ const Navbar = () => {
                 </Link>
                 <button
                   onClick={() => {
-                    signOut();
+                    logout();
                     setIsMenuOpen(false);
                   }}
                   className="w-full text-left block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700"

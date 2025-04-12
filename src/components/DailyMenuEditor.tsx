@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -44,7 +45,7 @@ const DailyMenuEditor = () => {
         },
         (payload) => {
           if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
-            const updatedMenu = payload.new as DailyMenu;
+            const updatedMenu = payload.new as unknown as DailyMenu;
             setMenu(updatedMenu);
             setBreakfast(updatedMenu.breakfast || '');
             setLunch(updatedMenu.lunch || '');
@@ -76,7 +77,7 @@ const DailyMenuEditor = () => {
       }
 
       if (data) {
-        setMenu(data);
+        setMenu(data as unknown as DailyMenu);
         setBreakfast(data.breakfast || '');
         setLunch(data.lunch || '');
         setSnacks(data.snacks || '');
@@ -125,7 +126,7 @@ const DailyMenuEditor = () => {
               snacks,
               dinner
             }
-          ]);
+          ] as any);
 
         if (error) throw error;
       }
