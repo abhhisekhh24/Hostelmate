@@ -250,47 +250,48 @@ const FoodMenu = () => {
       ) : (
         <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
           <Tabs defaultValue={activeDay} onValueChange={setActiveDay} className="w-full">
+            {/* Fixed mobile display by adding flex-wrap and better padding/sizing */}
             <div className="px-2 sm:px-4 overflow-x-auto">
-              <TabsList className="flex min-w-max mb-4">
+              <TabsList className="flex flex-wrap md:flex-nowrap mb-4 w-full">
                 <TabsTrigger 
                   value="monday" 
-                  className={`px-3 py-2 ${activeDay === 'monday' ? 'bg-mess-600 text-white' : ''}`}
+                  className={`px-2 sm:px-3 py-2 text-xs sm:text-sm ${activeDay === 'monday' ? 'bg-mess-600 text-white' : ''}`}
                 >
                   Monday
                 </TabsTrigger>
                 <TabsTrigger 
                   value="tuesday"
-                  className={`px-3 py-2 ${activeDay === 'tuesday' ? 'bg-mess-600 text-white' : ''}`}
+                  className={`px-2 sm:px-3 py-2 text-xs sm:text-sm ${activeDay === 'tuesday' ? 'bg-mess-600 text-white' : ''}`}
                 >
                   Tuesday
                 </TabsTrigger>
                 <TabsTrigger 
                   value="wednesday"
-                  className={`px-3 py-2 ${activeDay === 'wednesday' ? 'bg-mess-600 text-white' : ''}`}
+                  className={`px-2 sm:px-3 py-2 text-xs sm:text-sm ${activeDay === 'wednesday' ? 'bg-mess-600 text-white' : ''}`}
                 >
-                  Wednesday
+                  Wed
                 </TabsTrigger>
                 <TabsTrigger 
                   value="thursday"
-                  className={`px-3 py-2 ${activeDay === 'thursday' ? 'bg-mess-600 text-white' : ''}`}
+                  className={`px-2 sm:px-3 py-2 text-xs sm:text-sm ${activeDay === 'thursday' ? 'bg-mess-600 text-white' : ''}`}
                 >
-                  Thursday
+                  Thu
                 </TabsTrigger>
                 <TabsTrigger 
                   value="friday"
-                  className={`px-3 py-2 ${activeDay === 'friday' ? 'bg-mess-600 text-white' : ''}`}
+                  className={`px-2 sm:px-3 py-2 text-xs sm:text-sm ${activeDay === 'friday' ? 'bg-mess-600 text-white' : ''}`}
                 >
                   Friday
                 </TabsTrigger>
                 <TabsTrigger 
                   value="saturday"
-                  className={`px-3 py-2 ${activeDay === 'saturday' ? 'bg-mess-600 text-white' : ''}`}
+                  className={`px-2 sm:px-3 py-2 text-xs sm:text-sm ${activeDay === 'saturday' ? 'bg-mess-600 text-white' : ''}`}
                 >
-                  Saturday
+                  Sat
                 </TabsTrigger>
                 <TabsTrigger 
                   value="sunday"
-                  className={`px-3 py-2 ${activeDay === 'sunday' ? 'bg-mess-600 text-white' : ''}`}
+                  className={`px-2 sm:px-3 py-2 text-xs sm:text-sm ${activeDay === 'sunday' ? 'bg-mess-600 text-white' : ''}`}
                 >
                   Sunday
                 </TabsTrigger>

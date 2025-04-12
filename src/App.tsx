@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import Layout from "@/components/layout/Layout";
 import { AuthProvider } from './contexts/AuthContext';
 
@@ -39,6 +39,9 @@ function App() {
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              
+              {/* Handle incorrect /menu URL - redirect to /food-menu */}
+              <Route path="/menu" element={<Navigate to="/food-menu" replace />} />
               
               {/* Protected Routes */}
               <Route element={<ProtectedRoute />}>
