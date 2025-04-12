@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
@@ -9,17 +8,11 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { 
-  Badge,
-  Button,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Input,
-  Textarea  
-} from "@/components/ui/index";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { 
   Search, 
@@ -61,14 +54,12 @@ const ComplaintManagement = () => {
   const [selectedComplaint, setSelectedComplaint] = useState<Complaint | null>(null);
   const [responseText, setResponseText] = useState('');
   
-  // Check if user is admin
   const isAdmin = user?.isAdmin || user?.email?.includes('admin');
   
   if (!isAdmin) {
     return <Navigate to="/dashboard" replace />;
   }
 
-  // Fetch complaints with user details
   const { data: complaints = [], isLoading } = useQuery({
     queryKey: ['complaints'],
     queryFn: async () => {
@@ -88,7 +79,6 @@ const ComplaintManagement = () => {
         throw error;
       }
       
-      // Map the nested profile data to the user property
       return data.map((complaint: any) => ({
         ...complaint,
         user: complaint.profiles
@@ -96,7 +86,6 @@ const ComplaintManagement = () => {
     }
   });
 
-  // Update complaint status mutation
   const updateComplaintStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const { data, error } = await supabase
@@ -166,10 +155,9 @@ const ComplaintManagement = () => {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return format(date, 'PPp'); // Format: Jan 1, 2023, 12:00 PM
+    return format(date, 'PPp');
   };
 
-  // Filter complaints based on search query and status filter
   const filteredComplaints = complaints.filter(complaint => {
     const matchesSearch = 
       complaint.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||

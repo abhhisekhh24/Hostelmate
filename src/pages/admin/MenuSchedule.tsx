@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -156,8 +157,8 @@ const MenuSchedule = () => {
                     id={`newItem-${selectedMealType}`}
                     placeholder="Enter menu item"
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter' && e.target.value) {
-                        handleAddItem(selectedMealType, e.target.value);
+                      if (e.key === 'Enter' && (e.target as HTMLInputElement).value) {
+                        handleAddItem(selectedMealType, (e.target as HTMLInputElement).value);
                         (e.target as HTMLInputElement).value = ''; // Clear the input
                       }
                     }}
