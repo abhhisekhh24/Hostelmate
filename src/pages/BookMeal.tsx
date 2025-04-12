@@ -189,7 +189,7 @@ const BookMeal = () => {
     });
   };
   return <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">Book Meal Time Slots</h1>
+      <h1 className="text-3xl font-bold mb-6 text-purple-400">Book Meal Time Slots</h1>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-1">
