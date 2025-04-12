@@ -195,8 +195,8 @@ const BookMeal = () => {
         <div className="lg:col-span-1">
           <Card>
             <CardHeader>
-              <CardTitle>Today's Date</CardTitle>
-              <CardDescription>Bookings only available for today</CardDescription>
+              <CardTitle className="text-center">Today's Date</CardTitle>
+              <CardDescription className="text-center">Bookings only available for today</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="p-4 rounded-md border text-center bg-zinc-50">
