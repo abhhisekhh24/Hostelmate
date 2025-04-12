@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   Table, 
@@ -158,6 +159,7 @@ const ComplaintManagement = () => {
     return format(date, 'PPp');
   };
 
+  // Filter complaints based on search query and status filter
   const filteredComplaints = complaints.filter(complaint => {
     const matchesSearch = 
       complaint.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||

@@ -17,46 +17,84 @@ import {
   Users, 
   Eye,
   Mail,
-  Building
+  Building,
+  Loader2
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { useToast } from "@/components/ui/use-toast";
+
+type User = {
+  id: string;
+  name: string;
+  email: string;
+  reg_number: string;
+  room_number: string;
+  phone_number?: string;
+  avatar?: string;
+};
 
 const UserManagement = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterValue, setFilterValue] = useState('all');
   
-  // Sample user data
-  const [users, setUsers] = useState([
-    { id: 'user123', name: 'John Doe', email: 'john.doe@example.com', regNumber: 'BT20CSE123', roomNumber: 'A-101', phoneNumber: '9876543210', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=John' },
-    { id: 'user456', name: 'Jane Smith', email: 'jane.smith@example.com', regNumber: 'BT20ECE045', roomNumber: 'B-205', phoneNumber: '8765432109', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jane' },
-    { id: 'user789', name: 'Robert Brown', email: 'robert.brown@example.com', regNumber: 'BT20ME078', roomNumber: 'C-310', phoneNumber: '7654321098', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Robert' },
-    { id: 'user101', name: 'Lisa Wong', email: 'lisa.wong@example.com', regNumber: 'BT21CSE101', roomNumber: 'A-110', phoneNumber: '6543210987', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Lisa' },
-    { id: 'user102', name: 'Michael Chen', email: 'michael.chen@example.com', regNumber: 'BT21ECE102', roomNumber: 'B-220', phoneNumber: '5432109876', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Michael' },
-  ]);
-  
   // Check if user is admin
-  const isAdmin = user?.email?.includes('admin');
+  const isAdmin = user?.isAdmin || user?.email?.includes('admin');
   
   if (!isAdmin) {
     return <Navigate to="/dashboard" replace />;
   }
+
+  // Fetch users from Supabase
+  const { data: users = [], isLoading } = useQuery({
+    queryKey: ['users'],
+    queryFn: async () => {
+      // Get users from profiles table
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('name');
+      
+      if (error) {
+        toast({
+          title: "Error fetching users",
+          description: error.message,
+          variant: "destructive"
+        });
+        throw error;
+      }
+      
+      // For demonstration, get email from a mock function (in a real app, you'd have this in your data)
+      return data.map(profile => ({
+        id: profile.id,
+        name: profile.name || 'Unknown',
+        email: `${profile.reg_number?.toLowerCase() || 'user'}@example.com`, // Mock email
+        reg_number: profile.reg_number || 'Not Set',
+        room_number: profile.room_number || 'Not Set',
+        phone_number: profile.phone_number,
+        avatar: profile.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.name}`
+      })) as User[];
+    }
+  });
 
   // Filter users based on search query and filter value
   const filteredUsers = users.filter(user => {
     const matchesSearch = 
       user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.regNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.roomNumber.toLowerCase().includes(searchQuery.toLowerCase());
+      user.reg_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.room_number.toLowerCase().includes(searchQuery.toLowerCase());
     
     if (filterValue === 'all') return matchesSearch;
-    if (filterValue === 'a-block') return matchesSearch && user.roomNumber.startsWith('A');
-    if (filterValue === 'b-block') return matchesSearch && user.roomNumber.startsWith('B');
-    if (filterValue === 'c-block') return matchesSearch && user.roomNumber.startsWith('C');
+    if (filterValue === 'a-block') return matchesSearch && user.room_number.startsWith('A');
+    if (filterValue === 'b-block') return matchesSearch && user.room_number.startsWith('B');
+    if (filterValue === 'c-block') return matchesSearch && user.room_number.startsWith('C');
     
     return matchesSearch;
   });
@@ -101,68 +139,74 @@ const UserManagement = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Registration Number</TableHead>
-                  <TableHead>Room</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.length > 0 ? (
-                  filteredUsers.map((user) => (
-                    <TableRow key={user.id}>
-                      <TableCell>
-                        <div className="flex items-center space-x-3">
-                          <Avatar className="h-9 w-9">
-                            <AvatarImage src={user.avatar} alt={user.name} />
-                            <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium">{user.name}</p>
-                            <p className="text-sm text-gray-500">{user.email}</p>
+          {isLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-mess-600" />
+            </div>
+          ) : (
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Registration Number</TableHead>
+                    <TableHead>Room</TableHead>
+                    <TableHead>Contact</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredUsers.length > 0 ? (
+                    filteredUsers.map((user) => (
+                      <TableRow key={user.id}>
+                        <TableCell>
+                          <div className="flex items-center space-x-3">
+                            <Avatar className="h-9 w-9">
+                              <AvatarImage src={user.avatar} alt={user.name} />
+                              <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-medium">{user.name}</p>
+                              <p className="text-sm text-gray-500">{user.email}</p>
+                            </div>
                           </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>{user.regNumber}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="flex items-center space-x-1">
-                          <Building className="h-3 w-3" />
-                          <span>{user.roomNumber}</span>
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-1">
-                          <Mail className="h-3 w-3 text-gray-500" />
-                          <span className="text-sm">{user.email}</span>
-                        </div>
-                        {user.phoneNumber && (
-                          <div className="text-sm text-gray-500 mt-1">
-                            📞 {user.phoneNumber}
+                        </TableCell>
+                        <TableCell>{user.reg_number}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="flex items-center space-x-1">
+                            <Building className="h-3 w-3" />
+                            <span>{user.room_number}</span>
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center space-x-1">
+                            <Mail className="h-3 w-3 text-gray-500" />
+                            <span className="text-sm">{user.email}</span>
                           </div>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="sm">
-                          <Eye className="h-4 w-4 mr-2" /> View
-                        </Button>
+                          {user.phone_number && (
+                            <div className="text-sm text-gray-500 mt-1">
+                              📞 {user.phone_number}
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="sm">
+                            <Eye className="h-4 w-4 mr-2" /> View
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                        No users found matching your search criteria.
                       </TableCell>
                     </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-gray-500">
-                      No users found matching your search criteria.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          )}
           
           <div className="mt-4 text-sm text-gray-500">
             Showing {filteredUsers.length} of {users.length} residents
