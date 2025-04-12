@@ -139,7 +139,7 @@ const AnnouncementsNotification = () => {
       </Button>
 
       {showNotification && (
-        <Card className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-50 border-2 border-gray-200 dark:border-gray-700">
+        <Card className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-gray-800 rounded-lg shadow-lg z-50 border-2 border-gray-200 dark:border-gray-700 max-w-[95vw]">
           <div className="flex justify-between items-center p-3 bg-mess-100 dark:bg-mess-900 rounded-t-lg">
             <h3 className="font-semibold text-gray-900 dark:text-white flex items-center">
               <MessageSquare className="mr-2 h-5 w-5 text-mess-600" />

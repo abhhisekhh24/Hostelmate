@@ -56,6 +56,10 @@ const BookMeal = () => {
     }
   }, [user]);
 
+  useEffect(() => {
+    setDate(new Date());
+  }, []);
+
   const fetchBookings = async () => {
     try {
       setIsLoading(true);
@@ -181,28 +185,19 @@ const BookMeal = () => {
         <div className="lg:col-span-1">
           <Card>
             <CardHeader>
-              <CardTitle>Select Date</CardTitle>
-              <CardDescription>Choose a date to book your meals</CardDescription>
+              <CardTitle>Today's Date</CardTitle>
+              <CardDescription>Bookings only available for today</CardDescription>
             </CardHeader>
             <CardContent>
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={setDate}
-                className="rounded-md border"
-                disabled={(date) => {
-                  const now = new Date();
-                  const yesterday = new Date(now);
-                  yesterday.setDate(now.getDate() - 1);
-                  return date < yesterday;
-                }}
-              />
+              <div className="p-4 bg-gray-50 rounded-md border text-center">
+                <p className="text-lg font-medium">
+                  {date ? formatDate(date.toISOString()) : 'Loading...'}
+                </p>
+                <p className="text-sm text-gray-500 mt-2">
+                  Note: Meal slots can only be booked for today
+                </p>
+              </div>
             </CardContent>
-            <CardFooter>
-              <p className="text-sm text-gray-500">
-                Selected: <span className="font-medium">{date ? formatDate(date.toISOString()) : 'None'}</span>
-              </p>
-            </CardFooter>
           </Card>
         </div>
         

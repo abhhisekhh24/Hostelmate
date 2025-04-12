@@ -1,91 +1,120 @@
-
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Utensils, Bell, MessageSquare, MessageCircle, Users } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
-import { 
-  Calendar as CalendarIcon, 
-  MessageSquare, 
-  FileText, 
-  Users, 
-  Bell,
-  Utensils 
-} from 'lucide-react';
-import { Link } from 'react-router-dom';
-import DailyMenuEditor from '@/components/DailyMenuEditor';
 
 const AdminDashboard = () => {
   const { user } = useAuth();
-  
-  // Updated admin check to use both the explicit isAdmin property and the email check for backward compatibility
+
+  // Check if user is admin
   const isAdmin = user?.isAdmin || user?.email?.includes('admin');
   
   if (!isAdmin) {
     return <Navigate to="/dashboard" replace />;
   }
 
-  const adminCards = [
-    {
-      title: "Menu Management",
-      description: "Create and update food items",
-      icon: <FileText className="h-6 w-6 text-mess-600" />,
-      link: "/admin/menu-management"
-    },
-    {
-      title: "Feedback Management",
-      description: "View and respond to user feedback",
-      icon: <MessageSquare className="h-6 w-6 text-mess-600" />,
-      link: "/admin/feedback-management"
-    },
-    {
-      title: "User Management",
-      description: "View registered hostel residents",
-      icon: <Users className="h-6 w-6 text-mess-600" />,
-      link: "/admin/user-management"
-    },
-    {
-      title: "Announcements",
-      description: "Create and manage mess announcements",
-      icon: <Bell className="h-6 w-6 text-mess-600" />,
-      link: "/admin/announcements"
-    },
-    {
-      title: "Menu Schedule",
-      description: "Plan and schedule future menus",
-      icon: <CalendarIcon className="h-6 w-6 text-mess-600" />,
-      link: "/admin/menu-schedule"
-    }
-  ];
-
   return (
     <div className="container mx-auto py-8 px-4">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Admin Dashboard</h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">Manage your hostel mess operations</p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {adminCards.map((card, index) => (
-              <Link key={index} to={card.link} className="block">
-                <Card className="h-full hover:shadow-md transition-shadow">
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-lg font-medium">{card.title}</CardTitle>
-                    {card.icon}
-                  </CardHeader>
-                  <CardContent>
-                    <CardDescription>{card.description}</CardDescription>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <DailyMenuEditor />
-        </div>
+      <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Menu Management Card */}
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardHeader className="bg-mess-50 dark:bg-mess-900">
+            <CardTitle className="flex items-center">
+              <Utensils className="mr-2 h-5 w-5 text-mess-600" />
+              Menu Management
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <p className="text-gray-600 dark:text-gray-400 mb-4">Manage daily and weekly hostel menu items.</p>
+            <div className="flex justify-between">
+              <Button asChild variant="outline">
+                <Link to="/admin/menu-management">Daily Menu</Link>
+              </Button>
+              <Button asChild>
+                <Link to="/admin/menu-schedule">Weekly Schedule</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Announcements Card */}
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardHeader className="bg-mess-50 dark:bg-mess-900">
+            <CardTitle className="flex items-center">
+              <Bell className="mr-2 h-5 w-5 text-mess-600" />
+              Announcements
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <p className="text-gray-600 dark:text-gray-400 mb-4">Create and manage hostel announcements.</p>
+            <div className="flex justify-end">
+              <Button asChild>
+                <Link to="/admin/announcements">Manage Announcements</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Complaints Card - Added */}
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardHeader className="bg-mess-50 dark:bg-mess-900">
+            <CardTitle className="flex items-center">
+              <MessageSquare className="mr-2 h-5 w-5 text-mess-600" />
+              Complaints
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <p className="text-gray-600 dark:text-gray-400 mb-4">Review and respond to student complaints.</p>
+            <div className="flex justify-end">
+              <Button asChild>
+                <Link to="/admin/complaints">Manage Complaints</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Feedback Management Card */}
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardHeader className="bg-mess-50 dark:bg-mess-900">
+            <CardTitle className="flex items-center">
+              <MessageCircle className="mr-2 h-5 w-5 text-mess-600" />
+              Feedback Management
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <p className="text-gray-600 dark:text-gray-400 mb-4">View and analyze student feedback on mess services.</p>
+            <div className="flex justify-end">
+              <Button asChild>
+                <Link to="/admin/feedback-management">View Feedback</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* User Management Card */}
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardHeader className="bg-mess-50 dark:bg-mess-900">
+            <CardTitle className="flex items-center">
+              <Users className="mr-2 h-5 w-5 text-mess-600" />
+              User Management
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <p className="text-gray-600 dark:text-gray-400 mb-4">Manage student accounts and permissions.</p>
+            <div className="flex justify-end">
+              <Button asChild>
+                <Link to="/admin/user-management">Manage Users</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Additional cards... */}
       </div>
     </div>
   );
