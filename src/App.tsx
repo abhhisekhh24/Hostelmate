@@ -27,7 +27,7 @@ import UserManagement from './pages/admin/UserManagement';
 import Announcements from './pages/admin/Announcements';
 
 // Components
-import ProtectedRoute from './components/ProtectedRoute';
+import ProtectedRoute from '@/components/ProtectedRoute';
 import ComplaintManagement from './pages/admin/ComplaintManagement';
 
 function App() {
@@ -42,6 +42,9 @@ function App() {
               
               {/* Handle incorrect /menu URL - redirect to /food-menu */}
               <Route path="/menu" element={<Navigate to="/food-menu" replace />} />
+              
+              {/* Handle /admin URL - redirect to /admin/dashboard */}
+              <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
               
               {/* Protected Routes */}
               <Route element={<ProtectedRoute />}>
