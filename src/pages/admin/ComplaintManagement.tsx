@@ -39,10 +39,10 @@ type Complaint = {
   status: string;
   created_at: string;
   updated_at: string;
-  user?: {
-    name?: string;
-    reg_number?: string;
-    room_number?: string;
+  profiles?: {
+    name: string;
+    reg_number: string;
+    room_number: string;
   };
 };
 
@@ -68,7 +68,7 @@ const ComplaintManagement = () => {
         .from('complaints')
         .select(`
           *,
-          profiles:user_id (
+          profiles(
             name, 
             reg_number,
             room_number
@@ -77,6 +77,7 @@ const ComplaintManagement = () => {
         .order('created_at', { ascending: false });
       
       if (error) {
+        console.error("Error fetching complaints:", error);
         toast({
           title: "Error fetching complaints",
           description: error.message,
@@ -85,10 +86,7 @@ const ComplaintManagement = () => {
         throw error;
       }
       
-      return data.map((complaint: any) => ({
-        ...complaint,
-        user: complaint.profiles
-      })) as Complaint[];
+      return data as Complaint[];
     }
   });
 
@@ -169,8 +167,8 @@ const ComplaintManagement = () => {
     const matchesSearch = 
       complaint.subject?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       complaint.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (complaint.user?.name?.toLowerCase().includes(searchQuery.toLowerCase()) || false) ||
-      (complaint.user?.reg_number?.toLowerCase().includes(searchQuery.toLowerCase()) || false);
+      complaint.profiles?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      complaint.profiles?.reg_number?.toLowerCase().includes(searchQuery.toLowerCase());
     
     if (statusFilter === 'all') return matchesSearch;
     return matchesSearch && complaint.status === statusFilter;
@@ -239,9 +237,9 @@ const ComplaintManagement = () => {
                       <TableRow key={complaint.id} className="dark:border-gray-700">
                         <TableCell className="dark:text-gray-300">
                           <div>
-                            <p className="font-medium">{complaint.user?.name || 'Unknown'}</p>
+                            <p className="font-medium">{complaint.profiles?.name || 'Unknown'}</p>
                             <p className="text-xs text-gray-500 dark:text-gray-400">
-                              Reg: {complaint.user?.reg_number || 'N/A'}, Room: {complaint.user?.room_number || 'N/A'}
+                              Reg: {complaint.profiles?.reg_number || 'N/A'}, Room: {complaint.profiles?.room_number || 'N/A'}
                             </p>
                           </div>
                         </TableCell>
@@ -302,9 +300,9 @@ const ComplaintManagement = () => {
               <div>
                 <h3 className="font-semibold mb-2 text-gray-900 dark:text-gray-100">Student Information</h3>
                 <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md border dark:border-gray-700">
-                  <p className="dark:text-gray-300"><span className="font-semibold">Name:</span> {selectedComplaint.user?.name || 'Unknown'}</p>
-                  <p className="dark:text-gray-300"><span className="font-semibold">Registration No:</span> {selectedComplaint.user?.reg_number || 'N/A'}</p>
-                  <p className="dark:text-gray-300"><span className="font-semibold">Room Number:</span> {selectedComplaint.user?.room_number || 'N/A'}</p>
+                  <p className="dark:text-gray-300"><span className="font-semibold">Name:</span> {selectedComplaint.profiles?.name || 'Unknown'}</p>
+                  <p className="dark:text-gray-300"><span className="font-semibold">Registration No:</span> {selectedComplaint.profiles?.reg_number || 'N/A'}</p>
+                  <p className="dark:text-gray-300"><span className="font-semibold">Room Number:</span> {selectedComplaint.profiles?.room_number || 'N/A'}</p>
                 </div>
               </div>
               
