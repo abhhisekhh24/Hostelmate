@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import FoodIllustrations from '@/components/animations/FoodIllustrations';
 import Logo from '@/components/logo/Logo';
+import ChefScene from '@/components/animations/ChefScene';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -62,6 +63,13 @@ const Login = () => {
       {!isLoggingIn && <FoodIllustrations />}
       
       <Card className="w-full max-w-md shadow-lg backdrop-blur-sm bg-white/90 dark:bg-gray-900/90 border-mess-200 dark:border-mess-800 z-10">
+        <div className="relative">
+          {/* 3D Chef Character */}
+          <div className="h-[180px] w-full overflow-visible">
+            <ChefScene />
+          </div>
+        </div>
+        
         <CardHeader className="space-y-1">
           <div className="flex justify-center mb-4">
             <Logo size="lg" />
