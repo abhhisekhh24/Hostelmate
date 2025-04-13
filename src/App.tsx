@@ -29,47 +29,52 @@ import Announcements from './pages/admin/Announcements';
 // Components
 import ProtectedRoute from '@/components/ProtectedRoute';
 import ComplaintManagement from './pages/admin/ComplaintManagement';
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
 
 function App() {
   return (
     <AuthProvider>
       <Router>
-        <Layout>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              
-              {/* Handle incorrect /menu URL - redirect to /food-menu */}
-              <Route path="/menu" element={<Navigate to="/food-menu" replace />} />
-              
-              {/* Handle /admin URL - redirect to /admin/dashboard */}
-              <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
-              
-              {/* Protected Routes */}
-              <Route element={<ProtectedRoute />}>
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/food-menu" element={<FoodMenu />} />
-                <Route path="/book-meal" element={<BookMeal />} />
-                <Route path="/complaints" element={<Complaints />} />
-                <Route path="/feedback" element={<Feedback />} />
-                <Route path="/help-desk" element={<HelpDesk />} />
-                
-                {/* Admin Routes */}
-                <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                <Route path="/admin/menu-management" element={<MenuManagement />} />
-                <Route path="/admin/menu-schedule" element={<MenuSchedule />} />
-                <Route path="/admin/feedback-management" element={<FeedbackManagement />} />
-                <Route path="/admin/user-management" element={<UserManagement />} />
-                <Route path="/admin/announcements" element={<Announcements />} />
-                <Route path="/admin/complaints" element={<ComplaintManagement />} />
-              </Route>
-              
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-        </Layout>
+        <Routes>
+          {/* Auth pages without layout */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          
+          {/* All other pages with layout */}
+          <Route path="/" element={<Layout><Index /></Layout>} />
+          
+          {/* Handle incorrect /menu URL - redirect to /food-menu */}
+          <Route path="/menu" element={<Navigate to="/food-menu" replace />} />
+          
+          {/* Handle /admin URL - redirect to /admin/dashboard */}
+          <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+          
+          {/* Protected Routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
+            <Route path="/profile" element={<Layout><Profile /></Layout>} />
+            <Route path="/settings" element={<Layout><Settings /></Layout>} />
+            <Route path="/food-menu" element={<Layout><FoodMenu /></Layout>} />
+            <Route path="/book-meal" element={<Layout><BookMeal /></Layout>} />
+            <Route path="/complaints" element={<Layout><Complaints /></Layout>} />
+            <Route path="/feedback" element={<Layout><Feedback /></Layout>} />
+            <Route path="/help-desk" element={<Layout><HelpDesk /></Layout>} />
+            
+            {/* Admin Routes */}
+            <Route path="/admin/dashboard" element={<Layout><AdminDashboard /></Layout>} />
+            <Route path="/admin/menu-management" element={<Layout><MenuManagement /></Layout>} />
+            <Route path="/admin/menu-schedule" element={<Layout><MenuSchedule /></Layout>} />
+            <Route path="/admin/feedback-management" element={<Layout><FeedbackManagement /></Layout>} />
+            <Route path="/admin/user-management" element={<Layout><UserManagement /></Layout>} />
+            <Route path="/admin/announcements" element={<Layout><Announcements /></Layout>} />
+            <Route path="/admin/complaints" element={<Layout><ComplaintManagement /></Layout>} />
+          </Route>
+          
+          <Route path="*" element={<Layout><NotFound /></Layout>} />
+        </Routes>
+        <Toaster />
+        <Sonner />
       </Router>
     </AuthProvider>
   );

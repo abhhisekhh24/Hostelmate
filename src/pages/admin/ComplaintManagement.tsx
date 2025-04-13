@@ -39,7 +39,7 @@ type Complaint = {
   status: string;
   created_at: string;
   updated_at: string;
-  profiles?: {
+  user_profile?: {
     name: string;
     reg_number: string;
     room_number: string;
@@ -64,29 +64,51 @@ const ComplaintManagement = () => {
   const { data: complaints = [], isLoading } = useQuery({
     queryKey: ['complaints'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First, fetch all complaints
+      const { data: complaintsData, error: complaintsError } = await supabase
         .from('complaints')
-        .select(`
-          *,
-          profiles(
-            name, 
-            reg_number,
-            room_number
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
       
-      if (error) {
-        console.error("Error fetching complaints:", error);
+      if (complaintsError) {
+        console.error("Error fetching complaints:", complaintsError);
         toast({
           title: "Error fetching complaints",
-          description: error.message,
+          description: complaintsError.message,
           variant: "destructive"
         });
-        throw error;
+        throw complaintsError;
       }
       
-      return data as Complaint[];
+      if (!complaintsData || complaintsData.length === 0) {
+        return [] as Complaint[];
+      }
+      
+      // Next, for each complaint, fetch the user profile
+      const complaintResults = await Promise.all(
+        complaintsData.map(async (complaint) => {
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('name, reg_number, room_number')
+            .eq('id', complaint.user_id)
+            .single();
+          
+          if (profileError) {
+            console.warn(`Could not fetch profile for user ${complaint.user_id}:`, profileError);
+            return {
+              ...complaint,
+              user_profile: undefined
+            };
+          }
+          
+          return {
+            ...complaint,
+            user_profile: profileData
+          };
+        })
+      );
+      
+      return complaintResults as Complaint[];
     }
   });
 
@@ -167,8 +189,8 @@ const ComplaintManagement = () => {
     const matchesSearch = 
       complaint.subject?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       complaint.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      complaint.profiles?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      complaint.profiles?.reg_number?.toLowerCase().includes(searchQuery.toLowerCase());
+      complaint.user_profile?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      complaint.user_profile?.reg_number?.toLowerCase().includes(searchQuery.toLowerCase());
     
     if (statusFilter === 'all') return matchesSearch;
     return matchesSearch && complaint.status === statusFilter;
@@ -237,9 +259,9 @@ const ComplaintManagement = () => {
                       <TableRow key={complaint.id} className="dark:border-gray-700">
                         <TableCell className="dark:text-gray-300">
                           <div>
-                            <p className="font-medium">{complaint.profiles?.name || 'Unknown'}</p>
+                            <p className="font-medium">{complaint.user_profile?.name || 'Unknown'}</p>
                             <p className="text-xs text-gray-500 dark:text-gray-400">
-                              Reg: {complaint.profiles?.reg_number || 'N/A'}, Room: {complaint.profiles?.room_number || 'N/A'}
+                              Reg: {complaint.user_profile?.reg_number || 'N/A'}, Room: {complaint.user_profile?.room_number || 'N/A'}
                             </p>
                           </div>
                         </TableCell>
@@ -300,9 +322,9 @@ const ComplaintManagement = () => {
               <div>
                 <h3 className="font-semibold mb-2 text-gray-900 dark:text-gray-100">Student Information</h3>
                 <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md border dark:border-gray-700">
-                  <p className="dark:text-gray-300"><span className="font-semibold">Name:</span> {selectedComplaint.profiles?.name || 'Unknown'}</p>
-                  <p className="dark:text-gray-300"><span className="font-semibold">Registration No:</span> {selectedComplaint.profiles?.reg_number || 'N/A'}</p>
-                  <p className="dark:text-gray-300"><span className="font-semibold">Room Number:</span> {selectedComplaint.profiles?.room_number || 'N/A'}</p>
+                  <p className="dark:text-gray-300"><span className="font-semibold">Name:</span> {selectedComplaint.user_profile?.name || 'Unknown'}</p>
+                  <p className="dark:text-gray-300"><span className="font-semibold">Registration No:</span> {selectedComplaint.user_profile?.reg_number || 'N/A'}</p>
+                  <p className="dark:text-gray-300"><span className="font-semibold">Room Number:</span> {selectedComplaint.user_profile?.room_number || 'N/A'}</p>
                 </div>
               </div>
               
