@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -246,10 +245,10 @@ const Announcements = () => {
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Announcements</h1>
         <Button 
-          className="bg-mess-600 hover:bg-mess-700"
+          className="bg-mess-600 hover:bg-mess-700 w-full sm:w-auto"
           onClick={() => setShowForm(!showForm)}
         >
           {showForm ? (
@@ -263,27 +262,28 @@ const Announcements = () => {
       </div>
       
       {showForm && (
-        <Card className="mb-6">
+        <Card className="mb-6 border dark:border-gray-700">
           <CardHeader>
-            <CardTitle>Create New Announcement</CardTitle>
+            <CardTitle className="text-gray-900 dark:text-gray-100">Create New Announcement</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleFormSubmit} className="space-y-4">
               <div className="space-y-2">
-                <label htmlFor="title" className="block text-sm font-medium">Title</label>
+                <label htmlFor="title" className="block text-sm font-medium text-gray-900 dark:text-gray-100">Title</label>
                 <Input 
                   id="title"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Enter announcement title"
                   required
+                  className="dark:bg-gray-800 dark:border-gray-700"
                 />
               </div>
               
               <div className="space-y-2">
-                <label htmlFor="priority" className="block text-sm font-medium">Priority</label>
+                <label htmlFor="priority" className="block text-sm font-medium text-gray-900 dark:text-gray-100">Priority</label>
                 <Select value={priority} onValueChange={setPriority}>
-                  <SelectTrigger>
+                  <SelectTrigger className="dark:bg-gray-800 dark:border-gray-700">
                     <SelectValue placeholder="Select priority" />
                   </SelectTrigger>
                   <SelectContent>
@@ -295,18 +295,19 @@ const Announcements = () => {
               </div>
               
               <div className="space-y-2">
-                <label htmlFor="expiryDate" className="block text-sm font-medium">Expiry Date (Optional)</label>
+                <label htmlFor="expiryDate" className="block text-sm font-medium text-gray-900 dark:text-gray-100">Expiry Date (Optional)</label>
                 <Input 
                   id="expiryDate"
                   type="date"
                   value={expiryDate}
                   onChange={(e) => setExpiryDate(e.target.value)}
                   min={format(new Date(), 'yyyy-MM-dd')}
+                  className="dark:bg-gray-800 dark:border-gray-700"
                 />
               </div>
               
               <div className="space-y-2">
-                <label htmlFor="content" className="block text-sm font-medium">Content</label>
+                <label htmlFor="content" className="block text-sm font-medium text-gray-900 dark:text-gray-100">Content</label>
                 <Textarea 
                   id="content"
                   value={content}
@@ -314,6 +315,7 @@ const Announcements = () => {
                   placeholder="Enter announcement content"
                   rows={4}
                   required
+                  className="dark:bg-gray-800 dark:border-gray-700"
                 />
               </div>
               
@@ -322,6 +324,7 @@ const Announcements = () => {
                   type="button" 
                   variant="outline"
                   onClick={() => setShowForm(false)}
+                  className="dark:border-gray-700 dark:text-gray-300"
                 >
                   Cancel
                 </Button>
@@ -339,27 +342,27 @@ const Announcements = () => {
         </Card>
       )}
       
-      <Card>
+      <Card className="border dark:border-gray-700">
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
-            <CardTitle className="flex items-center">
+            <CardTitle className="flex items-center text-gray-900 dark:text-gray-100">
               <Bell className="h-5 w-5 mr-2" /> 
               All Announcements
             </CardTitle>
             
-            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-              <div className="relative">
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
+              <div className="relative w-full sm:w-64">
                 <Input 
                   placeholder="Search announcements..." 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 w-full sm:w-64"
+                  className="pl-10 w-full dark:bg-gray-800 dark:border-gray-700"
                 />
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
               </div>
               
               <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className="w-full sm:w-40">
+                <SelectTrigger className="w-full sm:w-40 dark:bg-gray-800 dark:border-gray-700">
                   <SelectValue placeholder="Filter" />
                 </SelectTrigger>
                 <SelectContent>

@@ -77,6 +77,11 @@ const ComplaintManagement = () => {
         .order('created_at', { ascending: false });
       
       if (error) {
+        toast({
+          title: "Error fetching complaints",
+          description: error.message,
+          variant: "destructive"
+        });
         throw error;
       }
       
@@ -162,8 +167,8 @@ const ComplaintManagement = () => {
   // Filter complaints based on search query and status filter
   const filteredComplaints = complaints.filter(complaint => {
     const matchesSearch = 
-      complaint.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      complaint.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      complaint.subject?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      complaint.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (complaint.user?.name?.toLowerCase().includes(searchQuery.toLowerCase()) || false) ||
       (complaint.user?.reg_number?.toLowerCase().includes(searchQuery.toLowerCase()) || false);
     
@@ -177,27 +182,27 @@ const ComplaintManagement = () => {
         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Complaint Management</h1>
       </div>
       
-      <Card className="mb-6">
+      <Card className="mb-6 border dark:border-gray-700">
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
-            <CardTitle className="flex items-center">
+            <CardTitle className="flex items-center text-gray-900 dark:text-gray-100">
               <MessageSquare className="h-5 w-5 mr-2" /> 
               Student Complaints
             </CardTitle>
             
-            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-              <div className="relative">
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
+              <div className="relative w-full sm:w-64">
                 <Input 
                   placeholder="Search complaints..." 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 w-full sm:w-64"
+                  className="pl-10 w-full dark:bg-gray-800 dark:border-gray-700"
                 />
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
               </div>
               
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-40">
+                <SelectTrigger className="w-full sm:w-40 dark:bg-gray-800 dark:border-gray-700">
                   <SelectValue placeholder="Filter" />
                 </SelectTrigger>
                 <SelectContent>
@@ -216,35 +221,35 @@ const ComplaintManagement = () => {
               <Loader2 className="h-8 w-8 animate-spin text-mess-600" />
             </div>
           ) : (
-            <div className="rounded-md border overflow-hidden">
+            <div className="rounded-md border overflow-hidden dark:border-gray-700">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Student</TableHead>
-                    <TableHead>Subject</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                  <TableRow className="dark:border-gray-700">
+                    <TableHead className="dark:text-gray-300">Student</TableHead>
+                    <TableHead className="dark:text-gray-300">Subject</TableHead>
+                    <TableHead className="dark:text-gray-300">Category</TableHead>
+                    <TableHead className="dark:text-gray-300">Date</TableHead>
+                    <TableHead className="dark:text-gray-300">Status</TableHead>
+                    <TableHead className="text-right dark:text-gray-300">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredComplaints.length > 0 ? (
                     filteredComplaints.map((complaint) => (
-                      <TableRow key={complaint.id}>
-                        <TableCell>
+                      <TableRow key={complaint.id} className="dark:border-gray-700">
+                        <TableCell className="dark:text-gray-300">
                           <div>
                             <p className="font-medium">{complaint.user?.name || 'Unknown'}</p>
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
                               Reg: {complaint.user?.reg_number || 'N/A'}, Room: {complaint.user?.room_number || 'N/A'}
                             </p>
                           </div>
                         </TableCell>
-                        <TableCell className="max-w-[200px] truncate" title={complaint.subject}>
+                        <TableCell className="max-w-[200px] truncate dark:text-gray-300" title={complaint.subject}>
                           {complaint.subject}
                         </TableCell>
-                        <TableCell>{getCategoryLabel(complaint.category)}</TableCell>
-                        <TableCell>{formatDate(complaint.created_at)}</TableCell>
+                        <TableCell className="dark:text-gray-300">{getCategoryLabel(complaint.category)}</TableCell>
+                        <TableCell className="dark:text-gray-300">{formatDate(complaint.created_at)}</TableCell>
                         <TableCell>{getStatusBadge(complaint.status)}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end space-x-2">
@@ -252,6 +257,7 @@ const ComplaintManagement = () => {
                               variant="outline" 
                               size="sm"
                               onClick={() => handleViewComplaint(complaint)}
+                              className="dark:border-gray-700 dark:text-gray-300"
                             >
                               View Details
                             </Button>
@@ -259,7 +265,7 @@ const ComplaintManagement = () => {
                               value={complaint.status} 
                               onValueChange={(value) => handleStatusChange(complaint.id, value)}
                             >
-                              <SelectTrigger className="w-[130px] h-9">
+                              <SelectTrigger className="w-[130px] h-9 dark:bg-gray-800 dark:border-gray-700">
                                 <SelectValue placeholder="Set Status" />
                               </SelectTrigger>
                               <SelectContent>
@@ -274,7 +280,7 @@ const ComplaintManagement = () => {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-gray-500">
+                      <TableCell colSpan={6} className="text-center py-8 text-gray-500 dark:text-gray-400">
                         No complaints found matching your search criteria.
                       </TableCell>
                     </TableRow>
@@ -287,32 +293,32 @@ const ComplaintManagement = () => {
       </Card>
 
       {selectedComplaint && (
-        <Card>
+        <Card className="border dark:border-gray-700">
           <CardHeader>
-            <CardTitle>Complaint Details</CardTitle>
+            <CardTitle className="text-gray-900 dark:text-gray-100">Complaint Details</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <h3 className="font-semibold mb-2">Student Information</h3>
-                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md">
-                  <p><span className="font-semibold">Name:</span> {selectedComplaint.user?.name || 'Unknown'}</p>
-                  <p><span className="font-semibold">Registration No:</span> {selectedComplaint.user?.reg_number || 'N/A'}</p>
-                  <p><span className="font-semibold">Room Number:</span> {selectedComplaint.user?.room_number || 'N/A'}</p>
+                <h3 className="font-semibold mb-2 text-gray-900 dark:text-gray-100">Student Information</h3>
+                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md border dark:border-gray-700">
+                  <p className="dark:text-gray-300"><span className="font-semibold">Name:</span> {selectedComplaint.user?.name || 'Unknown'}</p>
+                  <p className="dark:text-gray-300"><span className="font-semibold">Registration No:</span> {selectedComplaint.user?.reg_number || 'N/A'}</p>
+                  <p className="dark:text-gray-300"><span className="font-semibold">Room Number:</span> {selectedComplaint.user?.room_number || 'N/A'}</p>
                 </div>
               </div>
               
               <div className="md:col-span-2">
-                <h3 className="font-semibold mb-2">Complaint</h3>
-                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md">
+                <h3 className="font-semibold mb-2 text-gray-900 dark:text-gray-100">Complaint</h3>
+                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-md border dark:border-gray-700">
                   <div className="flex justify-between items-start mb-3">
                     <div>
-                      <h4 className="font-bold text-lg">{selectedComplaint.subject}</h4>
+                      <h4 className="font-bold text-lg dark:text-gray-100">{selectedComplaint.subject}</h4>
                       <p className="text-sm">
                         <span className="inline-block mr-3">
                           <Badge variant="outline">{getCategoryLabel(selectedComplaint.category)}</Badge>
                         </span>
-                        <span className="text-gray-500">{formatDate(selectedComplaint.created_at)}</span>
+                        <span className="text-gray-500 dark:text-gray-400">{formatDate(selectedComplaint.created_at)}</span>
                       </p>
                     </div>
                     <div>
@@ -327,11 +333,11 @@ const ComplaintManagement = () => {
             </div>
             
             <div className="mt-8">
-              <h3 className="font-semibold mb-4">Change Status</h3>
-              <div className="flex space-x-4">
+              <h3 className="font-semibold mb-4 text-gray-900 dark:text-gray-100">Change Status</h3>
+              <div className="flex flex-wrap gap-2">
                 <Button 
                   variant={selectedComplaint.status === 'pending' ? 'default' : 'outline'} 
-                  className={selectedComplaint.status === 'pending' ? 'bg-yellow-500 hover:bg-yellow-600' : ''}
+                  className={selectedComplaint.status === 'pending' ? 'bg-yellow-500 hover:bg-yellow-600' : 'dark:border-gray-700 dark:text-gray-300'}
                   onClick={() => handleStatusChange(selectedComplaint.id, 'pending')}
                 >
                   <Clock className="h-4 w-4 mr-2" />
@@ -339,7 +345,7 @@ const ComplaintManagement = () => {
                 </Button>
                 <Button 
                   variant={selectedComplaint.status === 'in_progress' ? 'default' : 'outline'} 
-                  className={selectedComplaint.status === 'in_progress' ? 'bg-blue-500 hover:bg-blue-600' : ''}
+                  className={selectedComplaint.status === 'in_progress' ? 'bg-blue-500 hover:bg-blue-600' : 'dark:border-gray-700 dark:text-gray-300'}
                   onClick={() => handleStatusChange(selectedComplaint.id, 'in_progress')}
                 >
                   <AlertTriangle className="h-4 w-4 mr-2" />
@@ -347,7 +353,7 @@ const ComplaintManagement = () => {
                 </Button>
                 <Button 
                   variant={selectedComplaint.status === 'resolved' ? 'default' : 'outline'} 
-                  className={selectedComplaint.status === 'resolved' ? 'bg-green-500 hover:bg-green-600' : ''}
+                  className={selectedComplaint.status === 'resolved' ? 'bg-green-500 hover:bg-green-600' : 'dark:border-gray-700 dark:text-gray-300'}
                   onClick={() => handleStatusChange(selectedComplaint.id, 'resolved')}
                 >
                   <CheckCircle className="h-4 w-4 mr-2" />
@@ -357,7 +363,11 @@ const ComplaintManagement = () => {
             </div>
             
             <div className="mt-8">
-              <Button variant="outline" onClick={() => setSelectedComplaint(null)}>
+              <Button 
+                variant="outline" 
+                onClick={() => setSelectedComplaint(null)}
+                className="dark:border-gray-700 dark:text-gray-300"
+              >
                 Close Details
               </Button>
             </div>
