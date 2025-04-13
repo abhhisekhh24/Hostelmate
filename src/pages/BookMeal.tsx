@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -5,16 +6,19 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar } from "@/components/ui/calendar";
 import { useToast } from '@/components/ui/use-toast';
-import { Utensils, Clock, CheckCircle } from 'lucide-react';
+import { Utensils, Clock, CheckCircle, Leaf, Drumstick } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
 type BookingSlot = {
   id: string;
   meal_type: string;
   booking_date: string;
   time_slot: string;
   created_at: string;
+  meal_preference?: 'veg' | 'non-veg';
 };
 
 // Mock data for meal time slots
@@ -68,35 +72,40 @@ const timeSlots = {
     available: true
   }]
 };
+
 const BookMeal = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [activeMeal, setActiveMeal] = useState('breakfast');
   const [selectedSlots, setSelectedSlots] = useState<Record<string, string>>({});
+  const [mealPreferences, setMealPreferences] = useState<Record<string, 'veg' | 'non-veg'>>({
+    breakfast: 'veg',
+    lunch: 'veg',
+    snacks: 'veg',
+    dinner: 'veg'
+  });
   const [bookings, setBookings] = useState<BookingSlot[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const {
-    toast
-  } = useToast();
-  const {
-    user
-  } = useAuth();
+  const { toast } = useToast();
+  const { user } = useAuth();
+
   useEffect(() => {
     if (user) {
       fetchBookings();
     }
   }, [user]);
+
   useEffect(() => {
     setDate(new Date());
   }, []);
+
   const fetchBookings = async () => {
     try {
       setIsLoading(true);
-      const {
-        data,
-        error
-      } = await supabase.from('meal_bookings').select('*').order('booking_date', {
-        ascending: false
-      });
+      const { data, error } = await supabase
+        .from('meal_bookings')
+        .select('*')
+        .order('booking_date', { ascending: false });
+      
       if (error) throw error;
       if (data) {
         setBookings(data as unknown as BookingSlot[]);
@@ -112,12 +121,21 @@ const BookMeal = () => {
       setIsLoading(false);
     }
   };
+
   const handleSlotSelect = (mealType: string, slotId: string) => {
     setSelectedSlots({
       ...selectedSlots,
       [mealType]: slotId
     });
   };
+
+  const handleMealPreferenceChange = (mealType: string, preference: 'veg' | 'non-veg') => {
+    setMealPreferences({
+      ...mealPreferences,
+      [mealType]: preference
+    });
+  };
+
   const handleBooking = async () => {
     if (!user) {
       toast({
@@ -127,6 +145,7 @@ const BookMeal = () => {
       });
       return;
     }
+
     if (!date) {
       toast({
         title: "Date Required",
@@ -135,6 +154,7 @@ const BookMeal = () => {
       });
       return;
     }
+
     const selectedMeals = Object.keys(selectedSlots);
     if (selectedMeals.length === 0) {
       toast({
@@ -144,9 +164,11 @@ const BookMeal = () => {
       });
       return;
     }
+
     try {
       setIsLoading(true);
       const formattedDate = date.toISOString().split('T')[0];
+      
       const bookingsToInsert = selectedMeals.map(mealType => {
         const slotId = selectedSlots[mealType];
         const slotTimeObj = timeSlots[mealType as keyof typeof timeSlots].find(slot => slot.id === slotId);
@@ -154,18 +176,23 @@ const BookMeal = () => {
           user_id: user.id,
           meal_type: mealType,
           booking_date: formattedDate,
-          time_slot: slotTimeObj ? slotTimeObj.time : 'Unknown time slot'
+          time_slot: slotTimeObj ? slotTimeObj.time : 'Unknown time slot',
+          meal_preference: mealPreferences[mealType] || 'veg'
         };
       });
-      const {
-        data,
-        error
-      } = await supabase.from('meal_bookings').insert(bookingsToInsert).select();
+
+      const { data, error } = await supabase
+        .from('meal_bookings')
+        .insert(bookingsToInsert)
+        .select();
+
       if (error) throw error;
+
       toast({
         title: "Booking Successful",
         description: "Your meal time slots have been booked successfully."
       });
+
       fetchBookings();
       setSelectedSlots({});
     } catch (error: any) {
@@ -179,6 +206,7 @@ const BookMeal = () => {
       setIsLoading(false);
     }
   };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -188,7 +216,9 @@ const BookMeal = () => {
       day: 'numeric'
     });
   };
-  return <div className="container mx-auto px-4 py-8">
+
+  return (
+    <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-6 text-purple-400">Book Meal Time Slots</h1>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -238,21 +268,57 @@ const BookMeal = () => {
                   </TabsTrigger>
                 </TabsList>
                 
-                {(['breakfast', 'lunch', 'snacks', 'dinner'] as const).map(meal => <TabsContent key={meal} value={meal} className="pt-4">
-                    <div className="space-y-4">
+                {(['breakfast', 'lunch', 'snacks', 'dinner'] as const).map(meal => (
+                  <TabsContent key={meal} value={meal} className="pt-4">
+                    <div className="space-y-6">
                       <div>
-                        <Label className="text-base">Select your preferred time slot</Label>
+                        <Label className="text-base mb-2 block">Select your preferred time slot</Label>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                          {timeSlots[meal].map(slot => <div key={slot.id} className={`border rounded-md p-3 cursor-pointer transition-all ${selectedSlots[meal] === slot.id ? 'border-mess-500 bg-mess-50' : 'border-gray-200 hover:border-mess-300'}`} onClick={() => handleSlotSelect(meal, slot.id)}>
+                          {timeSlots[meal].map(slot => (
+                            <div 
+                              key={slot.id} 
+                              className={`border rounded-md p-3 cursor-pointer transition-all ${
+                                selectedSlots[meal] === slot.id ? 'border-mess-500 bg-mess-50' : 'border-gray-200 hover:border-mess-300'
+                              }`} 
+                              onClick={() => handleSlotSelect(meal, slot.id)}
+                            >
                               <div className="flex items-center">
                                 <Clock className="h-4 w-4 mr-2 text-mess-600" />
                                 <span className="text-sm">{slot.time}</span>
                               </div>
-                            </div>)}
+                            </div>
+                          ))}
                         </div>
                       </div>
+                      
+                      <div className="border-t pt-4">
+                        <Label className="text-base mb-3 block">Meal Preference</Label>
+                        
+                        <RadioGroup 
+                          value={mealPreferences[meal]} 
+                          onValueChange={(val) => handleMealPreferenceChange(meal, val as 'veg' | 'non-veg')}
+                          className="flex gap-6"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="veg" id={`${meal}-veg`} />
+                            <Label htmlFor={`${meal}-veg`} className="flex items-center">
+                              <Leaf className="h-4 w-4 mr-2 text-green-600" />
+                              Vegetarian
+                            </Label>
+                          </div>
+                          
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="non-veg" id={`${meal}-non-veg`} />
+                            <Label htmlFor={`${meal}-non-veg`} className="flex items-center">
+                              <Drumstick className="h-4 w-4 mr-2 text-red-600" />
+                              Non-Vegetarian
+                            </Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
                     </div>
-                  </TabsContent>)}
+                  </TabsContent>
+                ))}
               </Tabs>
             </CardContent>
             <CardFooter>
@@ -267,28 +333,52 @@ const BookMeal = () => {
               <CardTitle>My Bookings</CardTitle>
             </CardHeader>
             <CardContent>
-              {bookings.length > 0 ? <Table>
+              {bookings.length > 0 ? (
+                <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Date</TableHead>
                       <TableHead>Meal</TableHead>
                       <TableHead>Time Slot</TableHead>
+                      <TableHead>Preference</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {bookings.map(booking => <TableRow key={booking.id}>
+                    {bookings.map(booking => (
+                      <TableRow key={booking.id}>
                         <TableCell>{formatDate(booking.booking_date)}</TableCell>
                         <TableCell className="capitalize">{booking.meal_type}</TableCell>
                         <TableCell>{booking.time_slot}</TableCell>
-                      </TableRow>)}
+                        <TableCell>
+                          {booking.meal_preference === 'veg' ? (
+                            <div className="flex items-center">
+                              <Leaf className="h-4 w-4 mr-1 text-green-600" />
+                              <span>Vegetarian</span>
+                            </div>
+                          ) : booking.meal_preference === 'non-veg' ? (
+                            <div className="flex items-center">
+                              <Drumstick className="h-4 w-4 mr-1 text-red-600" />
+                              <span>Non-Vegetarian</span>
+                            </div>
+                          ) : (
+                            <span>Not specified</span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
                   </TableBody>
-                </Table> : <div className="text-center py-4 text-gray-500">
+                </Table>
+              ) : (
+                <div className="text-center py-4 text-gray-500">
                   You haven't made any bookings yet.
-                </div>}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
+
 export default BookMeal;
