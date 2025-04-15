@@ -6,11 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar } from "@/components/ui/calendar";
 import { useToast } from '@/components/ui/use-toast';
-import { Utensils, Clock, CheckCircle, Leaf, Drumstick } from 'lucide-react';
+import { Utensils, Clock, CheckCircle, Leaf, Drumstick, AlertCircle } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 type BookingSlot = {
   id: string;
@@ -85,6 +86,8 @@ const BookMeal = () => {
   });
   const [bookings, setBookings] = useState<BookingSlot[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [userBookedMeals, setUserBookedMeals] = useState<string[]>([]);
+  const [bookingError, setBookingError] = useState('');
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -95,8 +98,10 @@ const BookMeal = () => {
   }, [user]);
 
   useEffect(() => {
-    setDate(new Date());
-  }, []);
+    if (user && date) {
+      checkExistingBookings();
+    }
+  }, [user, date]);
 
   const fetchBookings = async () => {
     try {
@@ -122,7 +127,47 @@ const BookMeal = () => {
     }
   };
 
+  const checkExistingBookings = async () => {
+    if (!user || !date) return;
+    
+    try {
+      const formattedDate = date.toISOString().split('T')[0];
+      const { data, error } = await supabase
+        .from('meal_bookings')
+        .select('meal_type')
+        .eq('user_id', user.id)
+        .eq('booking_date', formattedDate);
+      
+      if (error) throw error;
+      
+      if (data) {
+        const bookedMealTypes = data.map(booking => booking.meal_type);
+        setUserBookedMeals(bookedMealTypes);
+        
+        // Clear selections for already booked meal types
+        const updatedSelectedSlots = { ...selectedSlots };
+        bookedMealTypes.forEach(mealType => {
+          if (updatedSelectedSlots[mealType]) {
+            delete updatedSelectedSlots[mealType];
+          }
+        });
+        setSelectedSlots(updatedSelectedSlots);
+      }
+    } catch (error: any) {
+      console.error('Error checking existing bookings:', error.message);
+    }
+  };
+
   const handleSlotSelect = (mealType: string, slotId: string) => {
+    if (userBookedMeals.includes(mealType)) {
+      toast({
+        title: "Already Booked",
+        description: `You have already booked a ${mealType} slot for today.`,
+        variant: "destructive"
+      });
+      return;
+    }
+
     setSelectedSlots({
       ...selectedSlots,
       [mealType]: slotId
@@ -137,6 +182,8 @@ const BookMeal = () => {
   };
 
   const handleBooking = async () => {
+    setBookingError('');
+    
     if (!user) {
       toast({
         title: "Authentication Required",
@@ -162,6 +209,16 @@ const BookMeal = () => {
         description: "Please select at least one meal time slot.",
         variant: "destructive"
       });
+      return;
+    }
+
+    // Check for already booked meal types
+    const alreadyBookedMeals = selectedMeals.filter(mealType => 
+      userBookedMeals.includes(mealType)
+    );
+
+    if (alreadyBookedMeals.length > 0) {
+      setBookingError(`You have already booked ${alreadyBookedMeals.join(', ')} for today.`);
       return;
     }
 
@@ -193,7 +250,9 @@ const BookMeal = () => {
         description: "Your meal time slots have been booked successfully."
       });
 
-      fetchBookings();
+      // Update the user's booked meals
+      await fetchBookings();
+      await checkExistingBookings();
       setSelectedSlots({});
     } catch (error: any) {
       console.error('Error booking slots:', error.message);
@@ -215,6 +274,10 @@ const BookMeal = () => {
       month: 'long',
       day: 'numeric'
     });
+  };
+
+  const isMealTypeBooked = (mealType: string) => {
+    return userBookedMeals.includes(mealType);
   };
 
   return (
@@ -248,75 +311,95 @@ const BookMeal = () => {
               <CardDescription>Book your preferred time slots for each meal</CardDescription>
             </CardHeader>
             <CardContent>
+              {bookingError && (
+                <Alert variant="destructive" className="mb-4">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{bookingError}</AlertDescription>
+                </Alert>
+              )}
+              
               <Tabs value={activeMeal} onValueChange={setActiveMeal}>
                 <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="breakfast" className="flex items-center justify-center">
+                  <TabsTrigger value="breakfast" className="flex items-center justify-center" disabled={isMealTypeBooked('breakfast')}>
                     <span className="hidden md:inline mr-2">Breakfast</span>
                     <Utensils className="h-4 w-4 md:hidden" />
+                    {isMealTypeBooked('breakfast') && <CheckCircle className="h-3 w-3 ml-1 text-green-500" />}
                   </TabsTrigger>
-                  <TabsTrigger value="lunch" className="flex items-center justify-center">
+                  <TabsTrigger value="lunch" className="flex items-center justify-center" disabled={isMealTypeBooked('lunch')}>
                     <span className="hidden md:inline mr-2">Lunch</span>
                     <Utensils className="h-4 w-4 md:hidden" />
+                    {isMealTypeBooked('lunch') && <CheckCircle className="h-3 w-3 ml-1 text-green-500" />}
                   </TabsTrigger>
-                  <TabsTrigger value="snacks" className="flex items-center justify-center">
+                  <TabsTrigger value="snacks" className="flex items-center justify-center" disabled={isMealTypeBooked('snacks')}>
                     <span className="hidden md:inline mr-2">Snacks</span>
                     <Utensils className="h-4 w-4 md:hidden" />
+                    {isMealTypeBooked('snacks') && <CheckCircle className="h-3 w-3 ml-1 text-green-500" />}
                   </TabsTrigger>
-                  <TabsTrigger value="dinner" className="flex items-center justify-center">
+                  <TabsTrigger value="dinner" className="flex items-center justify-center" disabled={isMealTypeBooked('dinner')}>
                     <span className="hidden md:inline mr-2">Dinner</span>
                     <Utensils className="h-4 w-4 md:hidden" />
+                    {isMealTypeBooked('dinner') && <CheckCircle className="h-3 w-3 ml-1 text-green-500" />}
                   </TabsTrigger>
                 </TabsList>
                 
                 {(['breakfast', 'lunch', 'snacks', 'dinner'] as const).map(meal => (
                   <TabsContent key={meal} value={meal} className="pt-4">
-                    <div className="space-y-6">
-                      <div>
-                        <Label className="text-base mb-2 block">Select your preferred time slot</Label>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                          {timeSlots[meal].map(slot => (
-                            <div 
-                              key={slot.id} 
-                              className={`border rounded-md p-3 cursor-pointer transition-all ${
-                                selectedSlots[meal] === slot.id ? 'border-mess-500 bg-mess-50' : 'border-gray-200 hover:border-mess-300'
-                              }`} 
-                              onClick={() => handleSlotSelect(meal, slot.id)}
-                            >
-                              <div className="flex items-center">
-                                <Clock className="h-4 w-4 mr-2 text-mess-600" />
-                                <span className="text-sm">{slot.time}</span>
+                    {isMealTypeBooked(meal) ? (
+                      <div className="p-4 rounded-md bg-gray-100 text-center">
+                        <p className="text-gray-600 flex items-center justify-center">
+                          <CheckCircle className="h-5 w-5 mr-2 text-green-500" />
+                          You have already booked a {meal} slot for today
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-6">
+                        <div>
+                          <Label className="text-base mb-2 block">Select your preferred time slot</Label>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                            {timeSlots[meal].map(slot => (
+                              <div 
+                                key={slot.id} 
+                                className={`border rounded-md p-3 cursor-pointer transition-all ${
+                                  selectedSlots[meal] === slot.id ? 'border-mess-500 bg-mess-50' : 'border-gray-200 hover:border-mess-300'
+                                }`} 
+                                onClick={() => handleSlotSelect(meal, slot.id)}
+                              >
+                                <div className="flex items-center">
+                                  <Clock className="h-4 w-4 mr-2 text-mess-600" />
+                                  <span className="text-sm">{slot.time}</span>
+                                </div>
                               </div>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div className="border-t pt-4">
+                          <Label className="text-base mb-3 block">Meal Preference</Label>
+                          
+                          <RadioGroup 
+                            value={mealPreferences[meal]} 
+                            onValueChange={(val) => handleMealPreferenceChange(meal, val as 'veg' | 'non-veg')}
+                            className="flex gap-6"
+                          >
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="veg" id={`${meal}-veg`} />
+                              <Label htmlFor={`${meal}-veg`} className="flex items-center">
+                                <Leaf className="h-4 w-4 mr-2 text-green-600" />
+                                Vegetarian
+                              </Label>
                             </div>
-                          ))}
+                            
+                            <div className="flex items-center space-x-2">
+                              <RadioGroupItem value="non-veg" id={`${meal}-non-veg`} />
+                              <Label htmlFor={`${meal}-non-veg`} className="flex items-center">
+                                <Drumstick className="h-4 w-4 mr-2 text-red-600" />
+                                Non-Vegetarian
+                              </Label>
+                            </div>
+                          </RadioGroup>
                         </div>
                       </div>
-                      
-                      <div className="border-t pt-4">
-                        <Label className="text-base mb-3 block">Meal Preference</Label>
-                        
-                        <RadioGroup 
-                          value={mealPreferences[meal]} 
-                          onValueChange={(val) => handleMealPreferenceChange(meal, val as 'veg' | 'non-veg')}
-                          className="flex gap-6"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="veg" id={`${meal}-veg`} />
-                            <Label htmlFor={`${meal}-veg`} className="flex items-center">
-                              <Leaf className="h-4 w-4 mr-2 text-green-600" />
-                              Vegetarian
-                            </Label>
-                          </div>
-                          
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="non-veg" id={`${meal}-non-veg`} />
-                            <Label htmlFor={`${meal}-non-veg`} className="flex items-center">
-                              <Drumstick className="h-4 w-4 mr-2 text-red-600" />
-                              Non-Vegetarian
-                            </Label>
-                          </div>
-                        </RadioGroup>
-                      </div>
-                    </div>
+                    )}
                   </TabsContent>
                 ))}
               </Tabs>

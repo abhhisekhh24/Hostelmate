@@ -183,6 +183,7 @@ export type Database = {
           booking_date: string
           created_at: string
           id: string
+          meal_preference: string | null
           meal_type: string
           time_slot: string
           updated_at: string
@@ -192,6 +193,7 @@ export type Database = {
           booking_date: string
           created_at?: string
           id?: string
+          meal_preference?: string | null
           meal_type: string
           time_slot: string
           updated_at?: string
@@ -201,6 +203,7 @@ export type Database = {
           booking_date?: string
           created_at?: string
           id?: string
+          meal_preference?: string | null
           meal_type?: string
           time_slot?: string
           updated_at?: string
