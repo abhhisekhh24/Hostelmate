@@ -10,6 +10,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
+import MealStatistics from './pages/MealStatistics';
 import Settings from './pages/Settings';
 import FoodMenu from './pages/FoodMenu';
 import BookMeal from './pages/BookMeal';
@@ -54,6 +55,7 @@ function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
             <Route path="/profile" element={<Layout><Profile /></Layout>} />
+            <Route path="/meal-statistics" element={<Layout><MealStatistics /></Layout>} />
             <Route path="/settings" element={<Layout><Settings /></Layout>} />
             <Route path="/food-menu" element={<Layout><FoodMenu /></Layout>} />
             <Route path="/book-meal" element={<Layout><BookMeal /></Layout>} />
