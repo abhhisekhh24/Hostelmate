@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -39,20 +38,16 @@ const Profile = () => {
   const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || '');
   const [avatar, setAvatar] = useState(user?.avatar || '');
   
-  // Meal statistics state
   const [mealBookings, setMealBookings] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Get current month date range
   const now = new Date();
   const monthStart = startOfMonth(now);
   const monthEnd = endOfMonth(now);
   const currentMonthName = format(now, 'MMMM yyyy');
 
-  // Avatar options
   const avatarOptions = ["https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka", "https://api.dicebear.com/7.x/avataaars/svg?seed=Dusty", "https://api.dicebear.com/7.x/avataaars/svg?seed=Missy", "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix", "https://api.dicebear.com/7.x/avataaars/svg?seed=Bailey", "https://api.dicebear.com/7.x/avataaars/svg?seed=Pepper"];
   
-  // Colors for charts
   const COLORS = {
     breakfast: '#8884d8', 
     lunch: '#82ca9d', 
@@ -62,7 +57,6 @@ const Profile = () => {
     nonveg: '#ff8042'
   };
   
-  // Fetch meal bookings data
   useEffect(() => {
     if (user) {
       fetchMealBookings();
@@ -95,7 +89,6 @@ const Profile = () => {
     }
   };
   
-  // Process data for meal type chart
   const getMealTypeChartData = () => {
     const mealCounts = {
       breakfast: 0,
@@ -117,7 +110,6 @@ const Profile = () => {
     }));
   };
   
-  // Process data for preference chart
   const getMealPreferenceData = () => {
     const prefCounts = {
       veg: 0,
@@ -135,7 +127,6 @@ const Profile = () => {
     ];
   };
   
-  // Process data for meal type by preference
   const getMealTypeByPreferenceData = () => {
     const data = [
       { name: 'Breakfast', veg: 0, nonveg: 0 },
@@ -269,7 +260,6 @@ const Profile = () => {
         </div>
       </div>
 
-      {/* Meal Statistics Section */}
       <div className="mt-8">
         <Card className="shadow-md">
           <CardHeader>
@@ -302,14 +292,14 @@ const Profile = () => {
               </div>
             ) : (
               <Tabs defaultValue="all" className="w-full">
-                <TabsList className="mb-4">
+                <TabsList className="grid w-full grid-cols-3 mb-6">
                   <TabsTrigger value="all">All Meals</TabsTrigger>
                   <TabsTrigger value="preference">By Preference</TabsTrigger>
                   <TabsTrigger value="combined">Combined View</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="all" className="space-y-4">
-                  <div className="h-80">
+                  <div className="flex justify-center items-center h-80">
                     <ChartContainer 
                       config={{
                         breakfast: { color: COLORS.breakfast },
@@ -317,6 +307,7 @@ const Profile = () => {
                         snacks: { color: COLORS.snacks },
                         dinner: { color: COLORS.dinner }
                       }}
+                      className="w-full max-w-md"
                     >
                       <RechartsPieChart>
                         <Pie
@@ -325,7 +316,7 @@ const Profile = () => {
                           cy="50%"
                           labelLine={true}
                           label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                          outerRadius={100}
+                          outerRadius={120}
                           dataKey="value"
                         >
                           {getMealTypeChartData().map((entry, index) => (
@@ -343,12 +334,13 @@ const Profile = () => {
                 </TabsContent>
                 
                 <TabsContent value="preference" className="space-y-4">
-                  <div className="h-80">
+                  <div className="flex justify-center items-center h-80">
                     <ChartContainer 
                       config={{
                         veg: { color: COLORS.veg },
                         nonveg: { color: COLORS.nonveg }
                       }}
+                      className="w-full max-w-md"
                     >
                       <RechartsPieChart>
                         <Pie
@@ -357,7 +349,7 @@ const Profile = () => {
                           cy="50%"
                           labelLine={true}
                           label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                          outerRadius={100}
+                          outerRadius={120}
                           dataKey="value"
                         >
                           {getMealPreferenceData().map((entry, index) => (
@@ -375,12 +367,13 @@ const Profile = () => {
                 </TabsContent>
                 
                 <TabsContent value="combined" className="space-y-4">
-                  <div className="h-80">
+                  <div className="flex justify-center items-center h-80">
                     <ChartContainer 
                       config={{
                         veg: { color: COLORS.veg },
                         nonveg: { color: COLORS.nonveg }
                       }}
+                      className="w-full max-w-2xl"
                     >
                       <ResponsiveContainer width="100%" height="100%">
                         <RechartsBarChart
@@ -414,4 +407,5 @@ const Profile = () => {
       </div>
     </div>;
 };
+
 export default Profile;
