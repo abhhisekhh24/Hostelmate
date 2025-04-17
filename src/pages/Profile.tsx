@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from '@/contexts/AuthContext';
-import { User, Pencil, Save } from 'lucide-react';
+import { User, Pencil, Save, BarChart3 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Profile = () => {
@@ -67,7 +67,7 @@ const Profile = () => {
               </Avatar>
               
               {isEditing && <div className="grid grid-cols-3 gap-2 w-full pt-2">
-                  {avatarOptions.map((avatarUrl, index) => <button key={index} className={`p-1 rounded-lg ${avatar === avatarUrl ? 'ring-2 ring-mess-600' : 'hover:bg-gray-100'}`} onClick={() => handleAvatarSelect(avatarUrl)}>
+                  {avatarOptions.map((avatarUrl, index) => <button key={index} className={`p-1 rounded-lg ${avatar === avatarUrl ? 'ring-2 ring-mess-600' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`} onClick={() => handleAvatarSelect(avatarUrl)}>
                       <Avatar className="h-14 w-14">
                         <AvatarImage src={avatarUrl} alt={`Avatar option ${index + 1}`} />
                         <AvatarFallback className="bg-mess-300">
@@ -102,37 +102,40 @@ const Profile = () => {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
-                {isEditing ? <Input id="name" value={name} onChange={e => setName(e.target.value)} /> : <div className="p-2 border rounded-md bg-gray-50">{user.name}</div>}
+                {isEditing ? <Input id="name" value={name} onChange={e => setName(e.target.value)} /> : <div className="p-2 border rounded-md bg-background dark:bg-background">{user.name}</div>}
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
-                <div className="p-2 border rounded-md bg-gray-50">{user.email}</div>
+                <div className="p-2 border rounded-md bg-background dark:bg-background">{user.email}</div>
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="regNumber">Registration Number</Label>
-                <div className="p-2 border rounded-md bg-gray-50">{user.regNumber}</div>
+                <div className="p-2 border rounded-md bg-background dark:bg-background">{user.regNumber}</div>
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="roomNumber">Room Number</Label>
-                <div className="p-2 border rounded-md bg-gray-50">{user.roomNumber}</div>
+                <div className="p-2 border rounded-md bg-background dark:bg-background">{user.roomNumber}</div>
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="phoneNumber">Phone Number</Label>
-                {isEditing ? <Input id="phoneNumber" value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} placeholder="Enter phone number" /> : <div className="p-2 border rounded-md bg-gray-50">
+                {isEditing ? <Input id="phoneNumber" value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} placeholder="Enter phone number" /> : <div className="p-2 border rounded-md bg-background dark:bg-background">
                     {user.phoneNumber || 'Not provided'}
                   </div>}
               </div>
 
-              <div className="pt-4">
-                <Button variant="outline" asChild>
-                  <Link to="/meal-statistics">
+              <div className="pt-6">
+                <Link to="/meal-statistics" className="inline-block w-full">
+                  <Button 
+                    className="w-full bg-gradient-to-r from-mess-600 to-mess-500 hover:from-mess-700 hover:to-mess-600 text-white font-medium py-3 rounded-md shadow-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
+                  >
+                    <BarChart3 className="h-5 w-5 mr-2" />
                     View Meal Statistics
-                  </Link>
-                </Button>
+                  </Button>
+                </Link>
               </div>
             </CardContent>
           </Card>
