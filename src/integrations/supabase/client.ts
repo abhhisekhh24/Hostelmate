@@ -40,6 +40,18 @@ declare module '@supabase/supabase-js' {
             updated_at: string;
           };
         };
+        meal_bookings: {
+          Row: {
+            id: string;
+            user_id: string;
+            booking_date: string;
+            meal_type: string;
+            time_slot: string;
+            meal_preference: string | null;
+            created_at: string;
+            updated_at: string;
+          };
+        };
       };
     };
   }

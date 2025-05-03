@@ -385,7 +385,7 @@ const BookMeal = () => {
                               <RadioGroupItem value="veg" id={`${meal}-veg`} />
                               <Label htmlFor={`${meal}-veg`} className="flex items-center">
                                 <Leaf className="h-4 w-4 mr-2 text-green-600" />
-                                Vegetarian
+                                Veg
                               </Label>
                             </div>
                             
@@ -393,7 +393,7 @@ const BookMeal = () => {
                               <RadioGroupItem value="non-veg" id={`${meal}-non-veg`} />
                               <Label htmlFor={`${meal}-non-veg`} className="flex items-center">
                                 <Drumstick className="h-4 w-4 mr-2 text-red-600" />
-                                Non-Vegetarian
+                                Non-Veg
                               </Label>
                             </div>
                           </RadioGroup>
@@ -436,12 +436,12 @@ const BookMeal = () => {
                           {booking.meal_preference === 'veg' ? (
                             <div className="flex items-center">
                               <Leaf className="h-4 w-4 mr-1 text-green-600" />
-                              <span>Vegetarian</span>
+                              <span>Veg</span>
                             </div>
                           ) : booking.meal_preference === 'non-veg' ? (
                             <div className="flex items-center">
                               <Drumstick className="h-4 w-4 mr-1 text-red-600" />
-                              <span>Non-Vegetarian</span>
+                              <span>Non-Veg</span>
                             </div>
                           ) : (
                             <span>Not specified</span>
