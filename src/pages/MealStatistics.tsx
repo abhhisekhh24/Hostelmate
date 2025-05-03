@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -107,8 +108,8 @@ const MealStatistics = () => {
     });
     
     return [
-      { name: 'Veg', value: prefCounts.veg, fill: COLORS.veg },
-      { name: 'Non-Veg', value: prefCounts.nonveg, fill: COLORS.nonveg }
+      { name: 'Vegetarian', value: prefCounts.veg, fill: COLORS.veg },
+      { name: 'Non-Vegetarian', value: prefCounts.nonveg, fill: COLORS.nonveg }
     ];
   };
   
@@ -242,7 +243,7 @@ const MealStatistics = () => {
                   </ChartContainer>
                 </div>
                 <div className="text-center text-sm text-gray-500">
-                  Veg vs Non-Veg meals booked
+                  Vegetarian vs Non-Vegetarian meals booked
                 </div>
               </TabsContent>
               
