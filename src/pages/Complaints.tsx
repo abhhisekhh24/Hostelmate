@@ -274,7 +274,7 @@ const Complaints = () => {
               </ul>
               <div className="mt-6 p-3 bg-mess-50 rounded border border-mess-100">
                 <p className="text-sm font-medium text-mess-700">Need immediate assistance?</p>
-                <p className="text-sm mt-1">Contact Mess Manager: <span className="font-medium">+1 (234) 567-8901</span></p>
+                <p className="text-sm mt-1">Contact Mess Manager: <span className="font-medium">+91 7008 567 273 </span></p>
               </div>
             </CardContent>
           </Card>

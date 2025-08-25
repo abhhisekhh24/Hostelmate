@@ -6,7 +6,7 @@ import { PhoneCall, Mail, MapPin, Clock, Info } from 'lucide-react';
 const HelpDesk = () => {
   const contacts = [
     {
-      role: "Warden",
+      role: "King",
       name: "Dr. Ramesh Kumar",
       phone: "7008567273",
       email: "warden@example.com",
